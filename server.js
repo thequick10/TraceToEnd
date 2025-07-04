@@ -32,9 +32,10 @@ const authConfig = {
 };
 
 // Apply Basic Authentication to multiple routes
-app.use('/resolve', basicAuth(authConfig));
-app.use('/analytics', basicAuth(authConfig));
-app.use('/resolve-multiple', basicAuth(authConfig));
+//app.use('/', basicAuth(authConfig));
+//app.use('/resolve', basicAuth(authConfig));
+//app.use('/analytics', basicAuth(authConfig));
+//app.use('/resolve-multiple', basicAuth(authConfig));
 
 // Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
