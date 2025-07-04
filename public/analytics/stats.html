@@ -342,7 +342,7 @@
       document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
       document.getElementById('totalDays').textContent = totalDays;
       document.getElementById('avgRequests').textContent = avgRequests.toLocaleString();
-      document.getElementById('peakRequests').textContent = peakRequests.toLocaleString();
+      document.getElementById('peakRequests').textContent = `${peakRequests.toLocaleString()} on ${date}`;
     }
 
     function updateTable() {
