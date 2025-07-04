@@ -1,4 +1,4 @@
-# 🎯 Affiliate URL Resolver
+# 🎯 TraceToEnd
 
 <div align="center">
 
