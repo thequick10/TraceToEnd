@@ -451,9 +451,9 @@ app.get('/ip', (request, response) => {
     response.send(clientIp);
 });
 
-//Keep Render service awake by pinging itself every 10 minutes
+//Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
-  const url = 'https://url-resolver-k3a1.onrender.com/'; // Replace with your actual Render URL
+  const url = 'https://tracetoend.onrender.com/'; // Replace with your actual Render URL
 
   https.get(url, (res) => {
     console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);
