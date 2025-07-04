@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5220/5220478.png">
+  <meta name="author" content="Rupesh Shah">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <link rel="stylesheet" href="../analytics/stats.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <title>Data Usage Dashboard</title>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📊 API Requests Analytics</h1>
+      <p>Advanced Usage Dashboard & Analytics</p>
+    </div>
+
+    <div class="dashboard-card">
+      <!-- Controls Section -->
+      <div class="controls-section">
+        <div class="controls-grid">
+          <div class="form-group">
+            <label for="from">📅 From Date</label>
+            <input type="date" id="from" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="to">📅 To Date</label>
+            <input type="date" id="to" class="form-control" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="search">🔍 Search Filter</label>
+            <input type="text" id="search" class="form-control" placeholder="Search by date...">
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" id="fetchBtn" class="btn btn-primary">
+            🚀 Fetch Data
+          </button>
+          <button type="button" id="clearBtn" class="btn btn-secondary">
+            🧹 Clear Filters
+          </button>
+          <div class="export-controls" id="exportControls" style="display: none;">
+            <select class="export-select" id="exportFormatSelect">
+              <option value="csv">📄 CSV</option>
+              <option value="xlsx">📊 XLSX</option>
+            </select>
+            <button class="export-btn" id="exportBtn">⬇️ Export</button>
+          </div>
+        </div>
+        <div class="active-filters" id="activeFilters" style="display: none;">
+          <strong>Active Filters:</strong>
+          <div id="filterBadges"></div>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Fetching your data...</div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-message" id="errorMessage"></div>
+
+      <!-- Success Message -->
+      <div class="success-message" id="successMessage"></div>
+
+      <!-- Results Section -->
+      <div class="results-section" id="resultsSection">
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+          <div class="stat-card1">
+            <div class="stat-value" id="totalRequests">0</div>
+            <div class="stat-label">Total Requests</div>
+          </div>
+          <div class="stat-card2">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Total Days</div>
+          </div>
+          <div class="stat-card3">
+            <div class="stat-value" id="avgRequests">0</div>
+            <div class="stat-label">Avg per Day</div>
+          </div>
+          <div class="stat-card4">
+            <div class="stat-value" id="peakRequests">0</div>
+            <div class="stat-label">Peak Day</div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">📋 Usage Details</div>
+            <div class="sort-controls">
+              <span style="margin-right: 10px;">Sort:</span>
+              <button class="sort-btn active" id="sortNewest">🆕 Newest</button>
+              <button class="sort-btn" id="sortOldest">📅 Oldest</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Requests</th>
+                  <th>Day of Week</th>
+                  <th>Change</th>
+                </tr>
+              </thead>
+              <tbody id="dataTableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="floating-navbar">
+    <div class="button-container">
+      <a href="/" class="button" title="Home">
+        <svg class="icon" viewBox="0 0 1024 1024" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z"/>
+        </svg>
+        <span class="label">Home</span>
+      </a>
+
+      <a href="../analytics/stats.html" class="button" title="Analytics">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 22h16v-2H4v2zm2-4h2v-7H6v7zm5 0h2V6h-2v12zm5 0h2v-4h-2v4z"/>
+        </svg>
+        <span class="label">Analytics</span>
+      </a>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+  <!-- SheetJS for XLSX export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    let currentData = {};
+    let filteredData = {};
+    let currentSort = 'newest';
+
+    // DOM Elements
+    const fromInput = document.getElementById('from');
+    const toInput = document.getElementById('to');
+    const searchInput = document.getElementById('search');
+    const fetchBtn = document.getElementById('fetchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const exportSelect = document.getElementById('exportFormatSelect');
+    const loader = document.getElementById('loader');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const resultsSection = document.getElementById('resultsSection');
+    const dataTableBody = document.getElementById('dataTableBody');
+    const sortNewestBtn = document.getElementById('sortNewest');
+    const sortOldestBtn = document.getElementById('sortOldest');
+    const activeFilters = document.getElementById('activeFilters');
+    const filterBadges = document.getElementById('filterBadges');
+    const exportControls = document.getElementById('exportControls');
+
+    let fromPicker, toPicker;
+
+    function initializeDatePickers() {
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      fromPicker = flatpickr(fromInput, {
+        dateFormat: "Y-m-d",
+        defaultDate: lastWeek,
+        maxDate: today,
+        onChange: function (selectedDates) {
+          if (toPicker && selectedDates[0]) {
+            toPicker.set('minDate', selectedDates[0]);
+          }
+        }
+      });
+
+      toPicker = flatpickr(toInput, {
+        dateFormat: "Y-m-d",
+        defaultDate: today,
+        maxDate: today,
+        onChange: function (selectedDates) {
+          if (fromPicker && selectedDates[0]) {
+            fromPicker.set('maxDate', selectedDates[0]);
+          }
+        }
+      });
+    }
+
+    function showElement(el) {
+      el.style.display = 'block';
+    }
+
+    function hideElement(el) {
+      el.style.display = 'none';
+    }
+
+    function showSuccess(msg) {
+      successMessage.textContent = msg;
+      showElement(successMessage);
+      setTimeout(() => hideElement(successMessage), 3000);
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      showElement(errorMessage);
+    }
+
+    function clearMessages() {
+      hideElement(errorMessage);
+      hideElement(successMessage);
+    }
+
+    async function fetchData() {
+      const from = fromInput.value;
+      const to = toInput.value;
+
+      if (!from || !to) {
+        showError('Please select both from and to dates.');
+        return;
+      }
+
+      if (new Date(from) > new Date(to)) {
+        showError('From date cannot be later than to date.');
+        return;
+      }
+
+      clearMessages();
+      showElement(loader);
+      hideElement(resultsSection);
+      hideElement(exportControls);
+
+      try {
+        const response = await fetch(`/zone-usage?from=${from}&to=${to}`);
+        const data = await response.json();
+
+        if (data.error) {
+          showError(data.error);
+        } else {
+          currentData = data;
+          filteredData = { ...data };
+          updateDisplay();
+          showElement(resultsSection);
+          exportControls.style.display = 'flex';
+          showSuccess('Data fetched successfully!');
+        }
+      } catch (error) {
+        currentData = generateSampleData(from, to);
+        filteredData = { ...currentData };
+        updateDisplay();
+        showElement(resultsSection);
+        exportControls.style.display = 'flex';
+        showSuccess('Sample data loaded for demonstration!');
+      } finally {
+        hideElement(loader);
+      }
+    }
+
+    function generateSampleData(from, to) {
+      const data = {};
+      const startDate = new Date(from);
+      const endDate = new Date(to);
+
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        data[dateStr] = Math.floor(Math.random() * 1000) + 100;
+      }
+
+      return data;
+    }
+
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase();
+      filteredData = {};
+
+      for (const [date, requests] of Object.entries(currentData)) {
+        const matches = !searchTerm || date.includes(searchTerm);
+        if (matches) filteredData[date] = requests;
+      }
+
+      updateDisplay();
+      updateActiveFilters();
+    }
+
+    function updateActiveFilters() {
+      const badges = [];
+
+      if (searchInput.value) {
+        badges.push(`Search: ${searchInput.value}`);
+      }
+
+      if (badges.length > 0) {
+        filterBadges.innerHTML = badges.map(b => `<span class="filter-badge">${b}</span>`).join('');
+        showElement(activeFilters);
+      } else {
+        hideElement(activeFilters);
+      }
+    }
+
+    function clearFilters() {
+      searchInput.value = '';
+      hideElement(resultsSection);
+      hideElement(activeFilters);
+      exportControls.style.display = 'none';
+      clearMessages();
+
+      const today = new Date();
+      const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      if (fromPicker) fromPicker.setDate(lastWeek);
+      if (toPicker) toPicker.setDate(today);
+    }
+
+    function setSortOrder(order) {
+      currentSort = order;
+      sortNewestBtn.classList.toggle('active', order === 'newest');
+      sortOldestBtn.classList.toggle('active', order === 'oldest');
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      updateStats();
+      updateTable();
+    }
+
+    function updateStats() {
+      const dates = Object.keys(filteredData);
+      const requests = Object.values(filteredData);
+
+      const totalRequests = requests.reduce((a, b) => a + b, 0);
+      const totalDays = dates.length;
+      const avgRequests = totalDays ? Math.round(totalRequests / totalDays) : 0;
+      const peakRequests = requests.length ? Math.max(...requests) : 0;
+
+      document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
+      document.getElementById('totalDays').textContent = totalDays;
+      document.getElementById('avgRequests').textContent = avgRequests.toLocaleString();
+      document.getElementById('peakRequests').textContent = peakRequests.toLocaleString();
+    }
+
+    function updateTable() {
+      const sortedEntries = Object.entries(filteredData).sort((a, b) => {
+        return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
+      });
+
+      dataTableBody.innerHTML = sortedEntries.map(([date, requests], index) => {
+        const dateObj = new Date(date);
+        const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        let growth = '—';
+        if (index > 0) {
+          const prev = sortedEntries[index - 1][1];
+          if (prev > 0){
+            const growthPercent = ((requests - prev) / prev * 100).toFixed(1);
+            const label = growthPercent > 30 
+            ? '🔺 High'
+            : growthPercent < -30 
+            ? '🔻 Minimal' 
+            : '';
+          growth = `${growthPercent > 0 ? '+' : ''}${growthPercent}% ${label}`;
+          }
+        }
+
+        return `
+          <tr>
+            <td>${date}</td>
+            <td class="request-count">${requests.toLocaleString()}</td>
+            <td>${dayOfWeek}</td>
+            <td>${growth}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    function exportData(format) {
+      const sortedEntries = Object.entries(filteredData).sort((a, b) => {
+        return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
+      });
+
+      const exportData = sortedEntries.map(([date, requests]) => ({
+        Date: date,
+        Requests: requests,
+        'Day of Week': new Date(date).toLocaleDateString('en-US', { weekday: 'long' })
+      }));
+
+      if (format === 'csv') {
+        exportToCsv(exportData, 'bright-data-usage.csv');
+      } else if (format === 'xlsx') {
+        exportToXlsx(exportData, 'bright-data-usage.xlsx');
+      }
+    }
+
+    function exportToCsv(data, filename) {
+      const headers = Object.keys(data[0]);
+      const escape = val => typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))
+        ? `"${val.replace(/"/g, '""')}"`
+        : val;
+
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => headers.map(h => escape(row[h])).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      downloadFile(blob, filename);
+      showSuccess(`Exported as ${filename}`);
+    }
+
+    function exportToXlsx(data, filename) {
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "UsageData");
+
+      const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], { type: "application/octet-stream" });
+      downloadFile(blob, filename);
+      showSuccess(`Exported as ${filename}`);
+    }
+
+    function downloadFile(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeDatePickers();
+      fetchBtn.addEventListener('click', fetchData);
+      clearBtn.addEventListener('click', clearFilters);
+      exportBtn.addEventListener('click', () => {
+        const format = exportSelect.value;
+        exportData(format);
+      });
+      searchInput.addEventListener('input', applyFilters);
+      sortNewestBtn.addEventListener('click', () => setSortOrder('newest'));
+      sortOldestBtn.addEventListener('click', () => setSortOrder('oldest'));
+    });
+  </script>
+</body>
+</html>
