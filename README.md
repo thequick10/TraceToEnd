@@ -8,10 +8,14 @@
 
 A powerful and efficient URL resolution service that tracks campaign parameters, handles complex redirects, and validates marketing URLs.
 
-[Key Features](#key-features) •
-[Installation](#installation) •
-[API Endpoints Usage](#usage) •
-[Deployment](#deployment)
+[Key Features](#-key-features) •
+[Installation](#%EF%B8%8F-installation) •
+[API Endpoints Usage](#-api-endpoints-usage) •
+[Deployment](#-deployment) •
+[Dependencies](#dependencies) •
+[Frontend Usage](#frontend-usage) •
+[Sample JSON Response](#sample-response) •
+[Import/Export Capabilities](#-importexport-capabilities)
 
 </div>
 
