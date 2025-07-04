@@ -76,8 +76,8 @@ A powerful and efficient URL resolution service that tracks campaign parameters,
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/rupeshdotw/rupeshdotshah-affiliate-url-checker.git
-cd rupeshdotshah-affiliate-url-checker
+git clone https://github.com/thequick10/TraceToEnd.git
+cd TraceToEnd
 ```
 
 2. **Install dependencies**
