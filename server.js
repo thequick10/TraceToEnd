@@ -445,11 +445,14 @@ app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'usage.html'));
 });
 
-app.get('/ip', (request, response) => {
-    const clientIp = request.ip;
-    console.log(`Client IP: ${clientIp}`);
-    response.send(clientIp);
+//Get Client IP through /ip endpoint
+app.get('/ip', (req, res) => {
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+  console.log('Headers:', req.headers);
+  console.log(`Client IP: ${clientIp}`);
+  res.send(clientIp);
 });
+
 
 //Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
