@@ -164,7 +164,7 @@ async function resolveFinalUrl(inputUrl, region = "US") {
         // console.log("✅ Final URL:", data.finalUrl);
         console.log(`✅ Final URL for [${selectedRegion}]:`, data.finalUrl);
         if (data.regionMatch !== undefined) {
-          console.log(`🔍 Region verification: Requested [${data.requestedRegion}] vs Actual [${data.actualRegion}] - ${data.regionMatch ? '✅ MATCH' : '❌ MISMATCH'}`);
+          console.log(`🔍 Region verification: Requested [${data.requestedRegion}] vs Actual [${data.actualRegion}] - ${data.regionMatch ? '✅ REGION MATCHED' : '❌ REGION MISMATCH'}`);
         }
         return data.finalUrl;
       } else {

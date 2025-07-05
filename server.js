@@ -17,10 +17,6 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-//Count the success & failed url requests
-let totalResolvedSuccess = 0;
-let totalResolvedFail = 0;
-
 const PORT = process.env.PORT || 8080;
 
 // Define authentication configuration
@@ -86,7 +82,6 @@ app.use('/resolve', limiter);
 app.set('trust proxy', 1);
 
 // BRIGHTDATA_API_USAGE_CONFIG
-const CUSTOMER_ID = process.env.BRIGHTDATA_CUSTOMER_ID;
 const API_KEY = process.env.BRIGHTDATA_API_KEY;
 const ZONE = process.env.BRIGHTDATA_ZONE;
 
@@ -224,7 +219,7 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
     // Detect IP info from inside the browser
     const ipData = await page.evaluate(async () => {
       try {
-        const res = await fetch("https://ipapi.co/json/");
+        const res = await fetch("https://get.geojs.io/v1/ip/geo.json");
         return await res.json(); // { ip, country_name, region, city, etc. }
       } catch (e) {
         return { error: "IP lookup failed" };
@@ -253,23 +248,18 @@ app.get("/resolve", async (req, res) => {
     return res.status(400).json({ error: "Invalid URL format" });
   }
 
-  console.log("⌛ Requesting new URL");
-  console.log(`🌐 Resolving URL for region [${region}]:`, inputUrl);
+  console.log(`⌛ Resolving URL for region [${region}]:`, inputUrl);
 
   try {
     const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region);
-
+    console.log(`URL Resolution Completed For: ${inputUrl}`);
     console.log(`→ Original URL: ${inputUrl}`);
     console.log(`→ Final URL   : ${finalUrl}`);
     console.log(`→ URLs Resolved with [${region}] Check IP Data ⤵`);
     if (ipData?.ip) {
-        console.log(`🌍 IP Info : ${ipData.ip} (${ipData.country_name || "Unknown"} - ${ipData.country_code || "N/A"})`);
+        console.log(`🌍 IP Info : ${ipData.ip} (${ipData.country || "Unknown Country"} - ${ipData.region || "Unknown Region"} - ${ipData.country_code || "Unknown country_code"})`);
         console.log(`🔍 Region Match: ${ipData.country_code?.toUpperCase() === region.toUpperCase() ? '✅ YES' : '❌ NO'}`);
     }
-    console.log(`URL Resolution Completed For: ${inputUrl}`);
-    totalResolvedSuccess++;
-    console.log(`✅ Total Successful Resolutions: ${totalResolvedSuccess}`);
-    console.log(`❌ Total Failed Resolutions: ${totalResolvedFail}`);
 
     return res.json({
       originalUrl: inputUrl,
@@ -289,9 +279,7 @@ app.get("/resolve", async (req, res) => {
       ipData // Region detection info
     });
   } catch (err) {
-    totalResolvedFail++;
     console.error(`❌ Resolution failed:`, err.stack || err.message);
-    console.log(`✅ Total Successful Resolutions: ${totalResolvedSuccess} || ❌ Total Failed Resolutions: ${totalResolvedFail}`);
     return res.status(500).json({ error: "❌ Resolution failed", details: err.message });
   }
 });
@@ -459,11 +447,18 @@ app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'usage.html'));
 });
 
-//Get Client IP through /ip endpoint
-app.get('/ip', (request, response) => {
-    const clientIp = request.ip;
-    console.log(`Client IP: ${clientIp}`);
-    response.send(clientIp);
+// IP endpoint
+app.get('/ip', (req, res) => {
+  const rawIp =
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.socket?.remoteAddress ||
+    req.ip;
+
+  // Remove IPv6 prefix if present
+  const clientIp = rawIp?.replace(/^::ffff:/, '');
+
+  console.log(`Client IP: ${clientIp}`);
+  res.send({ ip : clientIp });
 });
 
 //Keep Render service awake by pinging itself every 14 minutes
