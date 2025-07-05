@@ -210,7 +210,7 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
 
     // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
     try {
-        await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: timeout });
+        await page.goto(inputUrl, { waitUntil: "networkidle0", timeout: timeout });
     } catch (err) {
         console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
@@ -460,13 +460,11 @@ app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
 });
 
 //Get Client IP through /ip endpoint
-app.get('/ip', (req, res) => {
-  const clientIp = req.headers['x-forwarded-for'];
-  console.log('Headers:', req.headers);
-  console.log(`Client IP: ${clientIp}`);
-  res.send(`My IP Address is: ${clientIp}`);
+app.get('/ip', (request, response) => {
+    const clientIp = request.ip;
+    console.log(`Client IP: ${clientIp}`);
+    response.send(clientIp);
 });
-
 
 //Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
