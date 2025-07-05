@@ -214,7 +214,8 @@ async function addCampaign() {
 
   document.getElementById("campaign-url").value = "";
   document.getElementById("campaign-tags").value = "";
-  document.getElementById("url-country").value = "";
+  //document.getElementById("url-country").value = "";
+  $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
 }
 
 // Replace your existing refreshAllUrls function with this improved version
