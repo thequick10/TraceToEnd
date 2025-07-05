@@ -193,16 +193,30 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
 
     page.setDefaultNavigationTimeout(30000);
 
-    const timeout = process.env.NAVIGATION_TIMEOUT || 60000;
+    // Determine navigation timeout (use env variable or fallback to 60 seconds)
+    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 60000;
+
     if (!process.env.NAVIGATION_TIMEOUT) {
         console.log("[INFO] Using default timeout of 60000 ms");
     } else {
         console.log(`[INFO] Using navigation timeout: ${timeout} ms`);
     }
-    await page.goto(inputUrl, {waitUntil: "domcontentloaded", timeout: timeout });
+
+    // Validate the input URL
+    if (!inputUrl || typeof inputUrl !== 'string' || !inputUrl.startsWith('http')) {
+        console.error('[ERROR] Invalid or missing input URL:', inputUrl);
+        process.exit(1);
+    }
+
+    // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
+    try {
+        await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: timeout });
+    } catch (err) {
+        console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
+    }
 
     // Optional wait
-    await page.waitForSelector("body", {timeout: 60000});
+    await page.waitForSelector("body", {timeout: 120000});
 
     // Get resolved final URL
     const finalUrl = page.url();
@@ -265,7 +279,7 @@ app.get("/resolve", async (req, res) => {
       actualRegion: ipData?.country_code?.toUpperCase() || 'Unknown',
       regionMatch: ipData?.country_code?.toUpperCase() === region.toUpperCase(),
       method: "browser-api",
-      hasClickId: finalUrl.includes("clickid=" || finalUrl.includes("clickId=")),
+      hasClickId: finalUrl.includes("clickid=") || finalUrl.includes("clickId="),
       hasClickRef: finalUrl.includes("clickref="),
       hasUtmSource: finalUrl.includes("utm_source="),
       hasImRef: finalUrl.includes("im_ref="),
@@ -276,8 +290,8 @@ app.get("/resolve", async (req, res) => {
     });
   } catch (err) {
     totalResolvedFail++;
-    console.error(`❌ Resolution failed:, err.stack, err.message`);
-    console.log(`✅ Total Successful Resolutions: ${totalResolvedSuccess}`, `❌ Total Failed Resolutions: ${totalResolvedFail}`);
+    console.error(`❌ Resolution failed:`, err.stack || err.message);
+    console.log(`✅ Total Successful Resolutions: ${totalResolvedSuccess} || ❌ Total Failed Resolutions: ${totalResolvedFail}`);
     return res.status(500).json({ error: "❌ Resolution failed", details: err.message });
   }
 });
