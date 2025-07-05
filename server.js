@@ -447,10 +447,10 @@ app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
 
 //Get Client IP through /ip endpoint
 app.get('/ip', (req, res) => {
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || req.ip;
+  const clientIp = req.headers['x-forwarded-for'];
   console.log('Headers:', req.headers);
   console.log(`Client IP: ${clientIp}`);
-  res.send(clientIp);
+  res.send(`My IP Address is: ${clientIp}`);
 });
 
 
