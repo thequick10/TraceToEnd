@@ -144,6 +144,8 @@
       </a>
     </div>
   </div>
+  <!-- Network Status Toast -->
+  <div id="network-toast" class="network-toast hidden"></div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
   <!-- SheetJS for XLSX export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -462,6 +464,35 @@
           loader.style.display = "none";
         }, 600); // match CSS transition duration
       }, 1000); // show loader for 1.5 seconds
+    });
+
+    //Network Connectio toast js
+    function showNetworkToast(message, type) {
+      const toast = document.getElementById('network-toast');
+      toast.textContent = message;
+      toast.className = `network-toast ${type}`;
+      toast.classList.remove('hidden');
+
+      // Auto-hide for online state
+      if (type === 'online') {
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      }
+    }
+
+    // Initial check
+    if (!navigator.onLine) {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    }
+
+    // Listen for changes
+    window.addEventListener('offline', () => {
+      showNetworkToast("You're offline. Check your connection.", 'offline');
+    });
+
+    window.addEventListener('online', () => {
+      showNetworkToast("You're back online 🎉", 'online');
     });
   </script>
 </body>

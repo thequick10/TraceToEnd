@@ -1281,3 +1281,32 @@ window.addEventListener("load", () => {
     }, 600); // match CSS transition duration
   }, 1000); // show loader for 1.5 seconds
 });
+
+//Network Connectio toast js
+function showNetworkToast(message, type) {
+  const toast = document.getElementById('network-toast');
+  toast.textContent = message;
+  toast.className = `network-toast ${type}`;
+  toast.classList.remove('hidden');
+
+  // Auto-hide for online state
+  if (type === 'online') {
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3000);
+  }
+}
+
+// Initial check
+if (!navigator.onLine) {
+  showNetworkToast("You're offline. Check your connection.", 'offline');
+}
+
+// Listen for changes
+window.addEventListener('offline', () => {
+  showNetworkToast("You're offline. Check your connection.", 'offline');
+});
+
+window.addEventListener('online', () => {
+  showNetworkToast("You're back online 🎉", 'online');
+});
