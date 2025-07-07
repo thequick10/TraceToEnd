@@ -188,8 +188,8 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
 
     page.setDefaultNavigationTimeout(30000);
 
-    // Determine navigation timeout (use env variable or fallback to 60 seconds)
-    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 60000;
+    // Determine navigation timeout (use env variable or fallback to 30 seconds)
+    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 30000;
 
     if (!process.env.NAVIGATION_TIMEOUT) {
         console.log("[INFO] Using default timeout of 60000 ms");
@@ -211,7 +211,7 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
     }
 
     // Optional wait
-    await page.waitForSelector("body", {timeout: 120000});
+    await page.waitForSelector("body", {timeout: 60000});
 
     // Get resolved final URL
     const finalUrl = page.url();
