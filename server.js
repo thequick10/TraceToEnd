@@ -295,7 +295,7 @@ app.get("/resolve", async (req, res) => {
       actualRegion: ipData?.country_code?.toUpperCase() || 'Unknown',
       regionMatch: ipData?.country_code?.toUpperCase() === region.toUpperCase(),
       method: "browser-api",
-      hasClickId: finalUrl.includes("clickid=") || finalUrl.includes("clickId="),
+      hasClickId: finalUrl?.includes("clickid=") || finalUrl?.includes("clickId="),
       hasClickRef: finalUrl.includes("clickref="),
       hasUtmSource: finalUrl.includes("utm_source="),
       hasImRef: finalUrl.includes("im_ref="),
