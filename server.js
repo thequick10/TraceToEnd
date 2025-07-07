@@ -186,17 +186,15 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
       });
     }
 
-    // page.setDefaultNavigationTimeout(15000);
+    page.setDefaultNavigationTimeout(20000);
 
-    // Determine navigation timeout (use env variable or fallback to 30 seconds)
-    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 30000;
-
-    page.setDefaultNavigationTimeout(timeout);
+    // Determine navigation timeout (use env variable or fallback to 60 seconds)
+    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 60000;
 
     if (process.env.NAVIGATION_TIMEOUT) {
         console.log(`[INFO] Using navigation timeout: ${timeout} ms`);
     } else {
-        console.log("[INFO] Using default timeout of 30000 ms");
+        console.log("[INFO] Using default timeout of 60000 ms");
     }
 
     // Validate the input URL
@@ -205,18 +203,11 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
         process.exit(1);
     }
 
-    // Try navigating with networkidle2 (wait for network to be mostly idle)
+    // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
     try {
-      await page.goto(inputUrl, { waitUntil: "networkidle2", timeout: timeout });
+      await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: timeout });
     } catch (err) {
-      //console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
-      console.warn(`[WARN] Navigation to ${inputUrl} failed with error: ${err.message}`);
-      try {
-        await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: 10000 });
-      } catch (fallbackErr) {
-        console.error(`[ERROR] Fallback navigation failed: ${fallbackErr.message}`);
-        return { error: `Navigation failed: ${fallbackErr.message}` };
-      }
+      console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
 
     // Optional wait
