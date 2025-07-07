@@ -1268,3 +1268,16 @@ function showNotification(message, type = "success") {
     notification.remove();
   }, 4000);
 }
+
+// Hide loader after page fully loads - loading screen
+window.addEventListener("load", () => {
+  const loader = document.getElementById("page-loader");
+
+  setTimeout(() => {
+    loader.style.opacity = "0";
+
+    setTimeout(() => {
+      loader.style.display = "none";
+    }, 600); // match CSS transition duration
+  }, 1000); // show loader for 1.5 seconds
+});

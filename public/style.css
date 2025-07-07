@@ -837,3 +837,61 @@ input::file-selector-button {
 .exit-button:hover svg {
   fill: black;
 }
+
+/* Loading app screen */
+#page-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.6s ease;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 6px solid rgba(255, 255, 255, 0.4);
+  border-top: 6px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.loading-text {
+  margin-top: 15px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  font-family: 'Albert Sans', sans-serif;
+  word-wrap: break-word;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 📱 Mobile adjustments */
+@media (max-width: 480px) {
+  .glass-card {
+    padding: 25px 20px;
+    width: 90%;
+  }
+
+  .loading-text {
+    font-size: 0.95rem;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 5px;
+  }
+}
