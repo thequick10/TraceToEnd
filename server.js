@@ -280,12 +280,20 @@ app.get("/resolve", async (req, res) => {
     const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region);
     console.log(`URL Resolution Completed For: ${inputUrl}`);
     console.log(`→ Original URL: ${inputUrl}`);
-    console.log(`→ Final URL   : ${finalUrl}`);
+    
+    if(finalUrl){
+      console.log(`→ Final URL   : ${finalUrl}`);
+    } else {
+      console.log(`⚠️ Final URL could not be resolved.`);
+    }
+
     console.log(`→ URLs Resolved with [${region}] Check IP Data ⤵`);
     if (ipData?.ip) {
         console.log(`🌍 IP Info : ${ipData.ip} (${ipData.country || "Unknown Country"} - ${ipData.region || "Unknown Region"} - ${ipData.country_code || "Unknown country_code"})`);
         console.log(`🔍 Region Match: ${ipData.country_code?.toUpperCase() === region.toUpperCase() ? '✅ YES' : '❌ NO'}`);
     }
+
+    const hasClickId = finalUrl ? finalUrl.includes("clickid=") || finalUrl.includes("clickId=") : false;
 
     return res.json({
       originalUrl: inputUrl,
@@ -295,14 +303,13 @@ app.get("/resolve", async (req, res) => {
       actualRegion: ipData?.country_code?.toUpperCase() || 'Unknown',
       regionMatch: ipData?.country_code?.toUpperCase() === region.toUpperCase(),
       method: "browser-api",
-      hasClickid: finalUrl.includes("clickid="),
-      hasClickId: finalUrl.includes("clickId="),
-      hasClickRef: finalUrl.includes("clickref="),
-      hasUtmSource: finalUrl.includes("utm_source="),
-      hasImRef: finalUrl.includes("im_ref="),
-      hasMtkSource: finalUrl.includes("mkt_source="),
-      hasTduId: finalUrl.includes("tduid="),
-      hasPublisherId: finalUrl.includes("publisherId="),
+      hasClickId,
+      hasClickRef: finalUrl?.includes("clickref="),
+      hasUtmSource: finalUrl?.includes("utm_source="),
+      hasImRef: finalUrl?.includes("im_ref="),
+      hasMtkSource: finalUrl?.includes("mkt_source="),
+      hasTduId: finalUrl?.includes("tduid="),
+      hasPublisherId: finalUrl?.includes("publisherId="),
       ipData // Region detection info
     });
   } catch (err) {
