@@ -156,27 +156,6 @@ function getRandomUserAgent() {
   return { userAgent, isMobile: type === 'mobile' };
 }
 
-// Helper function to retry logic for page.goto()
-async function navigateWithRetries(page, url, options, retries = 3, delayMs = 3000) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      console.log(`[Attempt ${attempt}] Navigating to: ${url}`);
-      await page.goto(url, options);
-      console.log(`[Attempt ${attempt}] Navigation successful.`);
-      return;
-    } catch (error) {
-      console.warn(`[Attempt ${attempt}] Navigation failed: ${error.message}`);
-
-      // If it's the last attempt, rethrow the error
-      if (attempt === retries) throw error;
-
-      // Wait before retrying
-      console.log(`[Attempt ${attempt}] Retrying in ${delayMs}ms...`);
-      await new Promise(res => setTimeout(res, delayMs));
-    }
-  }
-}
-
 // Main Puppeteer logic
 async function resolveWithBrowserAPI(inputUrl, region = "US") {
   const browserWSEndpoint = getBrowserWss(region);
@@ -226,13 +205,9 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
 
     // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
     try {
-      await navigateWithRetries(page, inputUrl, {
-        waitUntil: "networkidle0",
-        timeout: timeout
-      }, 3); // You can change retry count here
+      await page.goto(inputUrl, { waitUntil: "networkidle0", timeout: timeout });
     } catch (err) {
-      console.error(`[ERROR] Failed to navigate to ${inputUrl} after retries:`, err.message);
-      return { error: `Navigation failed after retries: ${err.message}` };
+      console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
 
     // Optional wait
