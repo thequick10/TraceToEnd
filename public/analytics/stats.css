@@ -160,6 +160,24 @@
       background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
       color: white;
     }
+    
+    .resolutions-stats{
+      background: linear-gradient(135deg, #007bff 0%, #d97706 100%);
+      font-family: 'Albert Sans', sans-serif;  
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+      border: 1px solid;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex: 0 0 auto;
+      text-decoration: none;
+    }
+    a{
+      text-decoration: none;
+    }
 
     .btn-export:hover {
       transform: translateY(-2px);
