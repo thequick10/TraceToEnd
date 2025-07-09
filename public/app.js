@@ -237,6 +237,7 @@ async function refreshAllUrls() {
   const originalFinalUrls = campaigns.map((c) => ({
     id: c.id,
     finalUrl: c.finalUrl,
+    refreshCount: 0,
   }));
 
   // Set all campaigns to loading state
@@ -421,6 +422,10 @@ async function refreshSingleUrl(campaignId) {
   console.log(`🔄 Refreshing with region: [${campaignRegion}]`);  
 
   const originalFinalUrl = campaign.finalUrl;
+
+  // ✅ Increment refresh count
+  campaign.refreshCount = (campaign.refreshCount || 0) + 1;
+
   campaign.finalUrl = "Loading...";
   renderTable();
 
@@ -479,7 +484,7 @@ function renderTable() {
             <div class="url-cell">
               <span class="status-badge status-error">❌ ${c.finalUrl}</span>
               <button class="copy-btn refresh-single-btn" onclick="refreshSingleUrl(${c.id})" title="Retry this URL">
-                🔄 Retry
+                🔄 Retry (${c.refreshCount || 0})
               </button>
             </div>
           `;
@@ -489,7 +494,7 @@ function renderTable() {
               <span class="url-text">${c.finalUrl}</span>
               <div class="url-actions">
                 <button class="copy-btn refresh-single-btn" onclick="refreshSingleUrl(${c.id})" title="Refresh this URL">
-                  🔄 Refresh URL
+                  🔄 Refresh URL (${c.refreshCount || 0})
                 </button>
               </div>
             </div>
@@ -720,7 +725,7 @@ function exportCSV() {
   });
 
   // Create a Blob from the CSV data and trigger the download
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "resolved-urls.csv";  // Filename for the downloaded CSV

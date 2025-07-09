@@ -19,6 +19,26 @@ const app = express();
 
 const PORT = process.env.PORT || 8080;
 
+// resolution stats
+const resolutionStats = {
+  success: 0,
+  successUrls: [],
+  failure: 0,
+  perRegion: {},
+  failedUrls: [], // ⬅️ new array to collect failed URLs
+};
+
+//Reset Resolution Stat data in every 24hours
+function resetStats() {
+resolutionStats.success = 0;
+resolutionStats.failure = 0;
+resolutionStats.perRegion = {};
+resolutionStats.failedUrls = [];
+console.log("📊 Resolution stats have been reset after 24 hours.");
+}
+const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in ms
+setInterval(resetStats, ONE_DAY);
+
 // Define authentication configuration
 const authConfig = {
   users: { 'admin': 'Admin@$%6677' },
@@ -77,7 +97,12 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/resolve', limiter);
+if (process.env.ENABLE_RATE_LIMIT !== 'false') {
+  console.log('[Rate Limiting] ENABLED');
+  app.use('/resolve', limiter);
+} else {
+  console.log('[Rate Limiting] DISABLED');
+}
 
 app.set('trust proxy', 1);
 
@@ -209,7 +234,7 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
 
     // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
     try {
-      await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: timeout });
+      await page.goto(inputUrl, { waitUntil: "networkidle2", timeout: timeout });
     } catch (err) {
       console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
@@ -257,6 +282,18 @@ app.get("/resolve", async (req, res) => {
 
   try {
     const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region);
+
+    if (finalUrl) {
+      resolutionStats.success++;
+      resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
+      resolutionStats.perRegion[region].success++;
+    } else {
+      resolutionStats.failure++;
+      resolutionStats.failedUrls.push({ url: inputUrl, region, reason: "Final URL not resolved" });
+      resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
+      resolutionStats.perRegion[region].failure++;
+    }
+
     console.log(`URL Resolution Completed For: ${inputUrl}`);
     console.log(`→ Original URL: ${inputUrl}`);
     
@@ -292,6 +329,11 @@ app.get("/resolve", async (req, res) => {
       ipData // Region detection info
     });
   } catch (err) {
+    resolutionStats.failure++;
+    resolutionStats.failedUrls.push({ url: inputUrl, region, reason: err.message });
+    resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
+    resolutionStats.perRegion[region].failure++;
+
     console.error(`❌ Resolution failed:`, err.stack || err.message);
     return res.status(500).json({ error: "❌ Resolution failed", details: err.message });
   }
@@ -309,6 +351,24 @@ app.get('/resolve-multiple', async (req, res) => {
   const regionList = regions.split(',');
   const promises = regionList.map(region => resolveWithBrowserAPI(inputUrl, region));
   const results = await Promise.all(promises);
+
+  results.forEach((result, i) => {
+    const region = regionList[i];
+    resolutionStats.perRegion[region] = resolutionStats.perRegion[region] || { success: 0, failure: 0 };
+
+    if (result.finalUrl) {
+      resolutionStats.success++;
+      resolutionStats.perRegion[region].success++;
+    } else {
+      resolutionStats.failure++;
+        resolutionStats.failedUrls.push({
+        url: inputUrl,
+        region,
+        reason: result.error || "Final URL not resolved"
+      });
+      resolutionStats.perRegion[region].failure++;
+    }
+  });
 
   res.json({
     originalUrl: inputUrl,
@@ -458,6 +518,21 @@ app.get("/", (req, res) => {
 // Get the usage.html file from analytics folder and making an endpoint
 app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'usage.html'));
+});
+
+//serve it via a clean route
+app.get("/resolutions-stats/resolutions.html", (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'resolutions-stats', 'resolutions.html'));
+});
+
+//serve it via a clean route endpoint like /resolution-stats
+app.get("/resolution-stats", (req, res) => {
+  res.json({
+    totalSuccess: resolutionStats.success,
+    totalFailure: resolutionStats.failure,
+    perRegion: resolutionStats.perRegion,
+    failedUrls: resolutionStats.failedUrls
+  });
 });
 
 // IP endpoint
