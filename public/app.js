@@ -704,32 +704,32 @@ function copyToClipboard(text) {
 // }
 function exportCSV() {
   let csv = "Date,Campaign URL,Final URL,Country,Tags\n";
-
-  const uniqueEntries = new Set();  // Set to track unique rows based on the combination of fields
-  const deduplicatedCampaigns = [];
-
   campaigns.forEach((c) => {
-    // Generate a unique identifier for each row using the specified fields
-    const key = `${c.date}|${(c.url || '').trim().toLowerCase()}|${(c.finalUrl || '').trim().toLowerCase()}|${(c.country || 'US').trim().toUpperCase()}|${(c.tags || '').trim()}`;
-
-    // Check if the key has already been encountered (indicating a duplicate)
-    if (!uniqueEntries.has(key)) {
-      uniqueEntries.add(key);  // Mark this combination as seen
-      deduplicatedCampaigns.push(c);  // Add the campaign to the deduplicated list
-    }
-  });
-
-  // Construct the CSV with the deduplicated campaigns
-  deduplicatedCampaigns.forEach((c) => {
     csv += `"${c.date}","${c.url}","${c.finalUrl}","${c.country || 'US'}","${c.tags}"\n`;
   });
 
-  // Create a Blob from the CSV data and trigger the download
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  // Set UTF-8 encoding
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+  // Generate timestamp in YYYYMMDD-HHMMSS format
+  const now = new Date();
+  const pad = (n) => n.toString().padStart(2, "0");
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+  // Filename with timestamp
+  const filename = `resolved-urls-${timestamp}.csv`;
+
+  // Create and trigger download link
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "resolved-urls.csv";  // Filename for the downloaded CSV
-  a.click();  // Trigger the download
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Cleanup
+  URL.revokeObjectURL(url);
 }
 
 function filterTable() {
