@@ -96,8 +96,8 @@ Configure your dotenv file in your local server and add all variable values in d
 
 For Instance:
 
-BRIGHTDATA_API_KEY=<YOUR BRIGHTDATA API KEY>
-BRIGHTDATA_US_PROXY=brd-customer-<CUSTOMER_ID>-zone-<YOUR ZONE ID>-country-<COUNTRY>
+BRIGHTDATA_API_KEY=<YOUR_BRIGHTDATA_API_KEY>
+BRIGHTDATA_US_PROXY=brd-customer-<CUSTOMER_ID>-zone-<YOUR_ZONE_ID>-country-<COUNTRY>
 
 Add all variables and their value just like above
 
