@@ -91,9 +91,18 @@ npm install
 ```
 
 3. **DotENV Config**
-   ```.env
-   Configure your dotenv file in your local server and add all variable values in dotenv
-   ```
+```.env
+Configure your dotenv file in your local server and add all variable values in dotenv
+
+For Instance:
+
+BRIGHTDATA_API_KEY=<YOUR BRIGHTDATA API KEY>
+BRIGHTDATA_US_PROXY=brd-customer-<CUSTOMER_ID>-zone-<YOUR ZONE ID>-country-<COUNTRY>
+
+Add all variables and their value just like above
+
+Make sure you use 2-letter country code like for united states use only - US
+```
 
 5. **Start the server**
 ```bash
@@ -124,13 +133,13 @@ The server provides multiple endpoints for URL resolution with different levels 
   Get system health and resource usage information.
 
 - `GET /resolution-stats`
-  Get resolution stat information directly in browser using this endpoint
+  Get resolution stat information directly in browser using this endpoint.
 
 - `GET /analytics/usage.html`  
   Access the analytics usage page (requires authentication).
   
 - `GET /resolution-stats/resolutions.html`
-  Access the URL resolution stats to track how many url succeed and failed in respective
+  Access the URL resolution stats to track how many url succeed and failed in respective.
 
 - `GET /ip`  
   Returns the client IP address.
@@ -140,7 +149,7 @@ The server provides multiple endpoints for URL resolution with different levels 
 {
   "originalUrl": "https://your-campaign-url.com",
   "finalUrl": "https://final-destination.com?clickid=123&utm_source=campaign",
-  "method": "puppeteer-standard",
+  "method": "browser-api",
   "hasClickId": true,
   "hasUtmSource": true,
   "hasClickRef": false
