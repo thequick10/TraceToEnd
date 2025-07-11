@@ -29,6 +29,7 @@ A powerful and efficient URL resolution service that tracks campaign parameters,
 - 📍 **Location Detection**: Auto-detection of user location and manual country selection
 - 🔐 **Security**: Rate limiting, security headers, and basic authentication for enhanced security
 - 📊 **API Usage Analytics**: Analytics page for usage tracking and monitoring
+- 🔗 **URL Resolution Stats** URL Resolutions stat page to track failed and success url in respect of regions
 - ✅ **Health Check Support**: System health and region listing API endpoints
 
 ### 📁 Import/Export Capabilities
@@ -89,7 +90,12 @@ cd TraceToEnd
 npm install
 ```
 
-3. **Start the server**
+3. **DotENV Config**
+   ```.env
+   Configure your dotenv file in your local server and add all variable values in dotenv
+   ```
+
+5. **Start the server**
 ```bash
 # Development mode
 npm run dev
@@ -117,8 +123,14 @@ The server provides multiple endpoints for URL resolution with different levels 
 - `GET /system-info`  
   Get system health and resource usage information.
 
+- `GET /resolution-stats`
+  Get resolution stat information directly in browser using this endpoint
+
 - `GET /analytics/usage.html`  
   Access the analytics usage page (requires authentication).
+  
+- `GET /resolution-stats/resolutions.html`
+  Access the URL resolution stats to track how many url succeed and failed in respective
 
 - `GET /ip`  
   Returns the client IP address.
