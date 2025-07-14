@@ -34,10 +34,34 @@ resolutionStats.success = 0;
 resolutionStats.failure = 0;
 resolutionStats.perRegion = {};
 resolutionStats.failedUrls = [];
-console.log("📊 Resolution stats have been reset after 24 hours.");
+console.log("📊 Resolution stats have been reset");
 }
-const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in ms
-setInterval(resetStats, ONE_DAY);
+// Time of day to reset (24-hour format)
+const RESET_HOUR = 3;  // 3 AM
+const RESET_MINUTE = 0;
+const RESET_SECOND = 0;
+
+// Calculate the delay until the next reset time
+function getDelayUntilNextReset() {
+  const now = new Date();
+  const nextReset = new Date();
+  nextReset.setHours(RESET_HOUR, RESET_MINUTE, RESET_SECOND, 0);
+  if (nextReset <= now) {
+    // If the time today has already passed, schedule for tomorrow
+    nextReset.setDate(nextReset.getDate() + 1);
+  }
+  return nextReset - now;
+}
+
+setTimeout(() => {
+  // Run once at the specified time
+  resetStats();
+
+  // Then schedule it to run every 24 hours
+  setInterval(resetStats, 24 * 60 * 60 * 1000);
+
+}, getDelayUntilNextReset());
+
 
 // Define authentication configuration
 const authConfig = {
