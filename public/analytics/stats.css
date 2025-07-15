@@ -222,7 +222,7 @@
       margin-bottom: 30px;
     }
 
-    .stat-card1, .stat-card3 {
+    .stat-card1 {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 25px;
@@ -238,8 +238,24 @@
       text-align: center;
       box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
+    .stat-card3{
+      background: linear-gradient(135deg, #f2c464 0%, #007bff 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
     .stat-card4{
       background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    .stat-card5 {
+      background: linear-gradient(135deg, #007bff 0%, #d97706 100%);
       color: white;
       padding: 25px;
       border-radius: 16px;

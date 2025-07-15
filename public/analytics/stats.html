@@ -102,6 +102,11 @@
             <div class="stat-value" id="peakRequests">0</div>
             <div class="stat-label">Peak Day</div>
           </div>
+          <!-- New Bandwidth Card -->
+          <div class="stat-card5">
+            <div class="stat-value" id="totalBandwidth">0</div>
+            <div class="stat-label">Total Bandwidth</div>
+          </div>
         </div>
 
         <!-- Data Table -->
@@ -120,6 +125,7 @@
                 <tr>
                   <th>Date</th>
                   <th>Requests</th>
+                  <th>Bandwidth</th>
                   <th>Day of Week</th>
                   <th>Change</th>
                 </tr>
@@ -165,6 +171,7 @@
     let currentData = {};
     let filteredData = {};
     let currentSort = 'newest';
+    let summaryData = {};
 
     // DOM Elements
     const fromInput = document.getElementById('from');
@@ -186,6 +193,17 @@
     const exportControls = document.getElementById('exportControls');
 
     let fromPicker, toPicker;
+
+    // Utility function to format bytes to human readable format
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      
+      const k = 1000; // Changed from 1024 to 1000
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 
     function initializeDatePickers() {
       const today = new Date();
@@ -259,21 +277,31 @@
 
       try {
         const response = await fetch(`/zone-usage?from=${from}&to=${to}`);
-        const data = await response.json();
+        const responseData = await response.json();
 
-        if (data.error) {
-          showError(data.error);
+        if (responseData.error) {
+          showError(responseData.error);
         } else {
-          currentData = data;
-          filteredData = { ...data };
+          // Extract data and summary from response
+          currentData = responseData.data || {};
+          summaryData = responseData.summary || {};
+          filteredData = { ...currentData };
+          
           updateDisplay();
           showElement(resultsSection);
           exportControls.style.display = 'flex';
           showSuccess('Data fetched successfully!');
         }
       } catch (error) {
+        // Generate sample data with bandwidth
         currentData = generateSampleData(from, to);
+        summaryData = {
+          totalBandwidth: Object.values(currentData).reduce((sum, item) => sum + item.bandwidth, 0),
+          totalRequests: Object.values(currentData).reduce((sum, item) => sum + item.requests, 0),
+          dateRange: { from, to }
+        };
         filteredData = { ...currentData };
+        
         updateDisplay();
         showElement(resultsSection);
         exportControls.style.display = 'flex';
@@ -290,7 +318,10 @@
 
       for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split('T')[0];
-        data[dateStr] = Math.floor(Math.random() * 1000) + 100;
+        data[dateStr] = {
+          requests: Math.floor(Math.random() * 1000) + 100,
+          bandwidth: Math.floor(Math.random() * 1000000000) + 10000000 // Random bytes
+        };
       }
 
       return data;
@@ -300,9 +331,9 @@
       const searchTerm = searchInput.value.toLowerCase();
       filteredData = {};
 
-      for (const [date, requests] of Object.entries(currentData)) {
+      for (const [date, data] of Object.entries(currentData)) {
         const matches = !searchTerm || date.includes(searchTerm);
-        if (matches) filteredData[date] = requests;
+        if (matches) filteredData[date] = data;
       }
 
       updateDisplay();
@@ -352,17 +383,21 @@
 
     function updateStats() {
       const dates = Object.keys(filteredData);
-      const requests = Object.values(filteredData);
+      const dataValues = Object.values(filteredData);
 
-      const totalRequests = requests.reduce((a, b) => a + b, 0);
+      const totalRequests = dataValues.reduce((sum, item) => sum + (item.requests || 0), 0);
       const totalDays = dates.length;
       const avgRequests = totalDays ? Math.round(totalRequests / totalDays) : 0;
-      const peakRequests = requests.length ? Math.max(...requests) : 0;
+      const peakRequests = dataValues.length ? Math.max(...dataValues.map(item => item.requests || 0)) : 0;
+
+      // Always calculate total bandwidth from filtered data (sum of all days)
+      const totalBandwidth = dataValues.reduce((sum, item) => sum + (item.bandwidth || 0), 0);
 
       document.getElementById('totalRequests').textContent = totalRequests.toLocaleString();
       document.getElementById('totalDays').textContent = totalDays;
       document.getElementById('avgRequests').textContent = avgRequests.toLocaleString();
       document.getElementById('peakRequests').textContent = peakRequests.toLocaleString();
+      document.getElementById('totalBandwidth').textContent = formatBytes(totalBandwidth);
     }
 
     function updateTable() {
@@ -370,20 +405,23 @@
         return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
       });
 
-      dataTableBody.innerHTML = sortedEntries.map(([date, requests], index) => {
+      dataTableBody.innerHTML = sortedEntries.map(([date, data], index) => {
         const dateObj = new Date(date);
         const dayOfWeek = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        const requests = data.requests || 0;
+        const bandwidth = data.bandwidth || 0;
+        
         let growth = '—';
         if (index > 0) {
-          const prev = sortedEntries[index - 1][1];
-          if (prev > 0){
+          const prev = sortedEntries[index - 1][1].requests || 0;
+          if (prev > 0) {
             const growthPercent = ((requests - prev) / prev * 100).toFixed(1);
             const label = growthPercent > 30 
-            ? '🔺 High'
-            : growthPercent < -30 
-            ? '🔻 Minimal' 
-            : '';
-          growth = `${growthPercent > 0 ? '+' : ''}${growthPercent}% ${label}`;
+              ? '🔺 High'
+              : growthPercent < -30 
+              ? '🔻 Minimal' 
+              : '';
+            growth = `${growthPercent > 0 ? '+' : ''}${growthPercent}% ${label}`;
           }
         }
 
@@ -391,6 +429,7 @@
           <tr>
             <td>${date}</td>
             <td class="request-count">${requests.toLocaleString()}</td>
+            <td class="bandwidth-count">${formatBytes(bandwidth)}</td>
             <td>${dayOfWeek}</td>
             <td>${growth}</td>
           </tr>`;
@@ -402,9 +441,11 @@
         return currentSort === 'newest' ? new Date(b[0]) - new Date(a[0]) : new Date(a[0]) - new Date(b[0]);
       });
 
-      const exportData = sortedEntries.map(([date, requests]) => ({
+      const exportData = sortedEntries.map(([date, data]) => ({
         Date: date,
-        Requests: requests,
+        Requests: data.requests || 0,
+        'Bandwidth (Bytes)': data.bandwidth || 0,
+        'Bandwidth (Formatted)': formatBytes(data.bandwidth || 0),
         'Day of Week': new Date(date).toLocaleDateString('en-US', { weekday: 'long' })
       }));
 
@@ -473,18 +514,17 @@
 
         setTimeout(() => {
           loader.style.display = "none";
-        }, 600); // match CSS transition duration
-      }, 1000); // show loader for 1.5 seconds
+        }, 600);
+      }, 1000);
     });
 
-    //Network Connectio toast js
+    // Network Connection toast js
     function showNetworkToast(message, type) {
       const toast = document.getElementById('network-toast');
       toast.textContent = message;
       toast.className = `network-toast ${type}`;
       toast.classList.remove('hidden');
 
-      // Auto-hide for online state
       if (type === 'online') {
         setTimeout(() => {
           toast.classList.add('hidden');
@@ -492,12 +532,10 @@
       }
     }
 
-    // Initial check
     if (!navigator.onLine) {
       showNetworkToast("You're offline. Check your connection.", 'offline');
     }
 
-    // Listen for changes
     window.addEventListener('offline', () => {
       showNetworkToast("You're offline. Check your connection.", 'offline');
     });

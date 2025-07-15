@@ -421,7 +421,7 @@ app.get('/resolve-multiple', async (req, res) => {
   });
 });
 
-// Track BrightData API Usage Using Endpoint /zone-usage - /zone-usage?from=YYYY-MM-DD&to=YYYY-MM-DD
+// Enhanced BrightData API Usage Endpoint with Bandwidth Features /zone-usage - /zone-usage?from=YYYY-MM-DD&to=YYYY-MM-DD
 app.get('/zone-usage', (req, res) => {
   const { from, to } = req.query;
 
@@ -452,31 +452,46 @@ app.get('/zone-usage', (req, res) => {
     apiRes.on('end', () => {
       try {
         const json = JSON.parse(data);
-        console.log('Raw API response:', json); // Log the raw response to verify
+        console.log('Raw API response:', json);
 
         const result = {};
         
-        // Access the zone data
-        const zoneData = json.c_a4a3b5b0.data?.[ZONE]; // Access the zone data
-        const { reqs_browser_api } = zoneData || {};
+        // Access the zone data (keeping original structure)
+        const zoneData = json.c_a4a3b5b0.data?.[ZONE];
+        const { reqs_browser_api, bw_browser_api, bw_sum } = zoneData || {};
 
-        console.log('Zone data:', zoneData); // Log zone data for clarity
+        console.log('Zone data:', zoneData);
 
-        if (reqs_browser_api) {
+        if (reqs_browser_api && bw_browser_api) {
           // Create a list of dates between 'from' and 'to'
           const dates = getDatesBetween(from, to);
 
-          // Match dates to request data
+          // Match dates to request and bandwidth data
           dates.forEach((date, index) => {
-            if (reqs_browser_api[index]) {
-              result[date] = reqs_browser_api[index]; // Map request count to date
-            }
+            result[date] = {
+              requests: reqs_browser_api[index] || 0,
+              bandwidth: bw_browser_api[index] || 0 // in bytes
+            };
           });
         }
 
-        res.json(result); // Return the result object
+        // Add summary statistics
+        const summary = {
+          totalBandwidth: bw_sum ? (bw_sum[0] || 0) : 0, // Total bandwidth in bytes
+          totalRequests: reqs_browser_api ? reqs_browser_api.reduce((sum, val) => sum + val, 0) : 0,
+          dateRange: {
+            from: from,
+            to: to
+          }
+        };
+
+        res.json({ 
+          data: result,
+          summary: summary
+        });
+        
       } catch (e) {
-        console.error('Error parsing response:', e); // Log the error
+        console.error('Error parsing response:', e);
         res.status(500).json({
           error: 'Failed to parse Bright Data API response.',
           details: e.message,
@@ -486,7 +501,7 @@ app.get('/zone-usage', (req, res) => {
   });
 
   apiReq.on('error', (e) => {
-    console.error('Request error:', e.message); // Log the request error
+    console.error('Request error:', e.message);
     res.status(500).json({
       error: 'Request to Bright Data API failed.',
       details: e.message,
@@ -496,15 +511,15 @@ app.get('/zone-usage', (req, res) => {
   apiReq.end();
 });
 
-// Helper function to get all dates between 'from' and 'to'
+// Helper function to get all dates between 'from' and 'to' (unchanged)
 function getDatesBetween(startDate, endDate) {
   const dates = [];
   const currentDate = new Date(startDate);
   const end = new Date(endDate);
 
   while (currentDate <= end) {
-    dates.push(currentDate.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-    currentDate.setDate(currentDate.getDate() + 1); // Move to the next day
+    dates.push(currentDate.toISOString().split('T')[0]);
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return dates;
