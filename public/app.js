@@ -679,7 +679,7 @@ function copyToClipboard(text) {
     notification.style.cssText = `
           position: fixed;
           top: 20px;
-          right: 20px;
+          right: 40%;
           background: linear-gradient(135deg, #10b981 0%, #059669 100%);
           color: white;
           padding: 15px 25px;
@@ -1099,7 +1099,7 @@ async function processImportedData(importedData) {
   progressNotification.style.cssText = `
         position: fixed;
         top: 70px;
-        right: 20px;
+        right: 40%;
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         /* background: linear-gradient(135deg, #10b981 0%, #059669 100%); */
         color: white;
@@ -1292,7 +1292,7 @@ function showNotification(message, type = "success") {
   notification.style.cssText = `
         position: fixed;
         top: 20px;
-        right: 20px;
+        right: 40%;
         background: ${bgColor};
         color: white;
         padding: 15px 25px;
