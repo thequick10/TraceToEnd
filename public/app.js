@@ -680,13 +680,18 @@ function copyToClipboard(text) {
           position: fixed;
           top: 20px;
           right: 40%;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          --background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background:rgba(99, 102, 241, 0.25);
           color: white;
           padding: 15px 25px;
           border-radius: 12px;
           box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
           z-index: 1000;
           font-weight: 600;
+          max-width: 300px;
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
           animation: fadeInUp 0.3s ease-out;
         `;
     notification.textContent = "✅ Copied to clipboard!";
@@ -1100,8 +1105,8 @@ async function processImportedData(importedData) {
         position: fixed;
         top: 70px;
         right: 40%;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        /* background: linear-gradient(135deg, #10b981 0%, #059669 100%); */
+        --background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        background:rgba(99, 102, 241, 0.25);
         color: white;
         padding: 15px 25px;
         border-radius: 12px;
@@ -1109,6 +1114,9 @@ async function processImportedData(importedData) {
         z-index: 1000;
         font-weight: 600;
         min-width: 200px;
+        backdrop-filter: blur(12px); /* glassmorphism effect */
+        -webkit-backdrop-filter: blur(12px); /* Safari support */
+        border: 1px solid rgba(255, 255, 255, 0.2);
     `;
   document.body.appendChild(progressNotification);
 
@@ -1365,7 +1373,8 @@ function showLoadingToast(toastMessage = "Loading...") {
     position: fixed;
     top: 20px;
     right: 40%;
-    background: rgba(255, 255, 255, 0.1); /* semi-transparent background */
+    --background: rgba(255, 255, 255, 0.1); /* semi-transparent background */
+    background:rgba(99, 102, 241, 0.25);
     color: white;
     padding: 15px 20px;
     border-radius: 12px;
