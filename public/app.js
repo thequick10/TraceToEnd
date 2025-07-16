@@ -183,16 +183,22 @@ async function addCampaign() {
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
   const country = document.getElementById("url-country").value || "US";
-  if (!url) return alert("Campaign URL is required");
-  if (!tags) return alert("Campaign tags are required");
-  if (!isValidURL(url)) return alert("Please enter a valid URL");
-  if (!country) return alert("Please select a country");
+  if (!url) return showNotification("Campaign URL is required");
+  if (!tags) return showNotification("Campaign tags are required");
+  if (!isValidURL(url)) return showNotification("Please enter a valid URL");
+  if (!country) return showNotification("Please select a country");
 
   loadingRow.style.display = "table-row";
+
+  // 👉 Show loader toast BEFORE resolving
+  showLoadingToast("Please wait, While we're fetching the URL...");
 
   const now = new Date();
   const finalUrl = await resolveFinalUrl(url, country);
   console.log(`🌍 Added campaign for ${country}:`, finalUrl);
+
+  // 👉 Remove loader toast AFTER resolving
+  removeLoadingToast();
 
   const campaign = {
     id: Date.now(),
@@ -207,7 +213,6 @@ async function addCampaign() {
 
   // Apply current sorting after adding new campaign
   sortTableByDate();
-
   saveCampaigns();
 
   loadingRow.style.display = "none";
@@ -216,6 +221,9 @@ async function addCampaign() {
   document.getElementById("campaign-tags").value = "";
   //document.getElementById("url-country").value = "";
   $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
+
+  // ✅ Show success notification
+  showNotification(`Resolution for ${country} added successfully!`, "success");
 }
 
 // Replace your existing refreshAllUrls function with this improved version
@@ -1344,3 +1352,77 @@ window.addEventListener('offline', () => {
 window.addEventListener('online', () => {
   showNetworkToast("You're back online 🎉", 'online');
 });
+
+// Show this toast message just after adding a single campaign
+let activeLoadingToast = null;
+
+function showLoadingToast(toastMessage = "Loading...") {
+  // Remove existing one if present
+  if (activeLoadingToast) activeLoadingToast.remove();
+
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 40%;
+    background: rgba(255, 255, 255, 0.1); /* semi-transparent background */
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 300px;
+    backdrop-filter: blur(12px); /* glassmorphism effect */
+    -webkit-backdrop-filter: blur(12px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: fadeInUp 0.3s ease-out;
+  `;
+
+  toast.innerHTML = `
+    <div class="loader" style="
+      border: 3px solid white;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display:none;
+      animation: spin 0.8s linear infinite;
+    "></div>
+    <span>${toastMessage}</span>
+  `;
+
+  document.body.appendChild(toast);
+  activeLoadingToast = toast;
+}
+
+// Remove it manually when done
+function removeLoadingToast() {
+  if (activeLoadingToast) {
+    activeLoadingToast.remove();
+    activeLoadingToast = null;
+  }
+}
+
+// Spinner animation
+const style = document.createElement("style");
+style.textContent = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+`;
+document.head.appendChild(style);
