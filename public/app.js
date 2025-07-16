@@ -183,10 +183,10 @@ async function addCampaign() {
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
   const country = document.getElementById("url-country").value || "US";
-  if (!url) return showNotification("Campaign URL is required");
-  if (!tags) return showNotification("Campaign tags are required");
-  if (!isValidURL(url)) return showNotification("Please enter a valid URL");
-  if (!country) return showNotification("Please select a country");
+  if (!url) return showNotification("Campaign URL is required", "error" );
+  if (!tags) return showNotification("Campaign tags are required", "error" );
+  if (!isValidURL(url)) return showNotification("Please enter a valid URL", "error" );
+  if (!country) return showNotification("Please select a country", "error" );
 
   loadingRow.style.display = "table-row";
 
