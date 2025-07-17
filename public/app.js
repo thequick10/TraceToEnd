@@ -12,7 +12,7 @@ async function detectLocation() {
     // Try multiple IP geolocation services for better reliability
     const services = [
       "https://ipapi.co/json/",
-      "https://api.ipgeolocation.io/ipgeo?apiKey=4d32f0da00224e50884faa071df764b9",
+      `https://api.ipgeolocation.io/ipgeo?apiKey=${process.env.GEO_FETCH_API_KEY}`,
       "https://ipinfo.io/json",
     ];
 
@@ -82,7 +82,12 @@ async function detectLocation() {
 function loadCampaigns() {
   const stored = localStorage.getItem("campaigns");
   if (stored) {
-    campaigns.push(...JSON.parse(stored));
+    try{
+      campaigns.push(...JSON.parse(stored));
+    }catch(e){
+      console.error("Error loading campaigns:", e);
+      showNotification("Error loading campaigns", "error");
+    }
     renderTable();
   }
 }
@@ -100,7 +105,12 @@ window.onload = function () {
 };
 
 function saveCampaigns() {
-  localStorage.setItem("campaigns", JSON.stringify(campaigns));
+  try {
+    localStorage.setItem("campaigns", JSON.stringify(campaigns));
+  } catch (err) {
+    showNotification("localStorage quota exceeded", err);
+    console.error("Storage limit reached! Please export or delete some campaigns.", "error");
+  }
 }
 
 function formatDate(date) {
@@ -118,8 +128,8 @@ function formatDate(date) {
 
 function isValidURL(str) {
   try {
-    new URL(str);
-    return true;
+    const url = new URL(str);
+    return url.protocol === "http:" || url.protocol === "https:";
   } catch (_) {
     return false;
   }
@@ -132,8 +142,7 @@ async function resolveFinalUrl(inputUrl, region = "US") {
       if (!inputUrl || typeof inputUrl !== "string") {
         console.error("❌ Invalid URL input");
         return fallback;
-      }
-  
+      }  
       // Trim and sanitize input
       const trimmedUrl = inputUrl.trim();
       try {
@@ -177,53 +186,73 @@ async function resolveFinalUrl(inputUrl, region = "US") {
     }
 }
 
+// Helper to escape HTML (to prevent XSS)
+function escapeHTML(str) {
+  return String(str).replace(/[&<>"'`=\/]/g, function (s) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+      '`': '&#x60;',
+      '=': '&#x3D;'
+    })[s];
+  });
+}
+
 //Function to handle add campaign after adding a new campaign and click on add campaign button
 async function addCampaign() {
   const url = document.getElementById("campaign-url").value;
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
   const country = document.getElementById("url-country").value || "US";
-  if (!url) return showNotification("Campaign URL is required", "error" );
-  if (!tags) return showNotification("Campaign tags are required", "error" );
-  if (!isValidURL(url)) return showNotification("Please enter a valid URL", "error" );
-  if (!country) return showNotification("Please select a country", "error" );
+
+  // Validate inputs
+  if (!url) return showNotification("Campaign URL is required", "error");
+  if (!tags) return showNotification("Campaign tags are required", "error");
+  if (!isValidURL(url)) return showNotification("Please enter a valid http(s) URL", "error");
+  if (!country) return showNotification("Please select a country", "error");
 
   loadingRow.style.display = "table-row";
+  showLoadingToast("Please wait, While we're fetching the your requested URL...");
 
-  // 👉 Show loader toast BEFORE resolving
-  showLoadingToast("Please wait, While we're fetching the URL...");
+  try {
+    const now = new Date();
+    const finalUrl = await resolveFinalUrl(url, country);
+    console.log(`🌍 Added campaign for ${country}:`, finalUrl);
 
-  const now = new Date();
-  const finalUrl = await resolveFinalUrl(url, country);
-  console.log(`🌍 Added campaign for ${country}:`, finalUrl);
+    // Sanitize user input before storing/rendering
+    const campaign = {
+      id: Date.now(),
+      url: escapeHTML(url),
+      finalUrl: escapeHTML(finalUrl),
+      tags: escapeHTML(tags),
+      date: formatDate(now),
+      country: escapeHTML(country),
+    };
 
-  // 👉 Remove loader toast AFTER resolving
-  removeLoadingToast();
+    campaigns.push(campaign);
 
-  const campaign = {
-    id: Date.now(),
-    url,
-    finalUrl,
-    tags,
-    date: formatDate(now),
-    country: country,
-  };
+    // Apply current sorting after adding new campaign
+    sortTableByDate();
+    saveCampaigns();
 
-  campaigns.push(campaign);
+    // Reset form fields
+    document.getElementById("campaign-url").value = "";
+    document.getElementById("campaign-tags").value = "";
+    $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
 
-  // Apply current sorting after adding new campaign
-  sortTableByDate();
-  saveCampaigns();
-
-  loadingRow.style.display = "none";
-
-  document.getElementById("campaign-url").value = "";
-  document.getElementById("campaign-tags").value = "";
-  //document.getElementById("url-country").value = "";
-  $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
-
-  // ✅ Show success notification
-  showNotification(`Resolution for ${country} added successfully!`, "success");
+    // ✅ Show success notification
+    showNotification(`Resolution for ${country} added successfully!`, "success");
+  } catch (err) {
+    showNotification("An error occurred while adding the campaign.", "error");
+    console.error(err);
+  } finally {
+    loadingRow.style.display = "none";
+    removeLoadingToast();
+  }
 }
 
 // Replace your existing refreshAllUrls function with this improved version
@@ -516,7 +545,7 @@ function renderTable() {
           <td>
             <input type="text"
                class="country-input"
-               value="${c.country || 'US'}"
+               value="${escapeHTML(c.country || 'US')}"
                onchange="updateCountry(${c.id}, this.value)"
                style="width:100px; text-transform:uppercase;" 
             />
@@ -1181,21 +1210,15 @@ async function processImportedData(importedData) {
       await Promise.all(batchPromises);
       totalProcessed += batch.length;
 
-      // Add completed campaigns to main array in original order
-      const orderedCampaigns = [];
-      for (let idx = 0; idx < importedData.length; idx++) {
+      // Only add the current batch's campaigns
+      const batchCampaigns = [];
+      for (let idx = batchStartIndex; idx < batchStartIndex + batch.length; idx++) {
         if (campaignMap.has(idx)) {
-          orderedCampaigns.push(campaignMap.get(idx));
+          batchCampaigns.push(campaignMap.get(idx));
         }
       }
-
-      // Add the ordered campaigns to the main campaigns array
-      // Remove any previously added import campaigns and add the updated ordered list
-      const existingCampaigns = campaigns.filter(
-        (c) => c.originalIndex === undefined
-      );
-      campaigns.length = 0; // Clear array
-      campaigns.push(...existingCampaigns, ...orderedCampaigns);
+      // Add only new batch campaigns to the main campaigns array
+      campaigns.push(...batchCampaigns);
 
       // Update table and save after each batch
       renderTable();
@@ -1312,6 +1335,9 @@ function showNotification(message, type = "success") {
         max-width: 300px;
       `;
   notification.textContent = message;
+  notification.setAttribute("role", "alert");
+  notification.setAttribute("aria-live", "assertive");
+
   document.body.appendChild(notification);
 
   setTimeout(() => {
