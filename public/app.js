@@ -226,8 +226,8 @@ async function addCampaign() {
     // Sanitize user input before storing/rendering
     const campaign = {
       id: Date.now() + Math.random().toString(36).slice(2),
-      url: escapeHTML(url),
-      finalUrl: escapeHTML(finalUrl),
+      url: url,
+      finalUrl: finalUrl,
       tags: escapeHTML(tags),
       date: formatDate(now),
       country: escapeHTML(country),
