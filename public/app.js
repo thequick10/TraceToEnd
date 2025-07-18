@@ -225,7 +225,7 @@ async function addCampaign() {
 
     // Sanitize user input before storing/rendering
     const campaign = {
-      id: Date.now(),
+      id: Date.now() + Math.random().toString(36).slice(2),
       url: escapeHTML(url),
       finalUrl: escapeHTML(finalUrl),
       tags: escapeHTML(tags),
@@ -696,6 +696,7 @@ document.getElementById("cancelBtn").addEventListener("click", hideModal);
 document.getElementById("exitBtn").addEventListener("click", hideModal);
 document.getElementById("deleteBtn").addEventListener("click", () => {
   campaigns.splice(0, campaigns.length);  // Clear campaigns
+  localStorage.removeItem("campaigns"); // Clear localStorage as well
   renderTable();
   saveCampaigns();
   hideModal();
@@ -1174,7 +1175,7 @@ async function processImportedData(importedData) {
           const now = new Date();
 
           const campaign = {
-            id: Date.now() + originalIndex, // Sequential IDs
+            id: Date.now() + Math.random().toString(36).slice(2) + originalIndex, // Sequential IDs
             url: item.url,
             finalUrl: finalUrl,
             tags: item.tags,
@@ -1191,7 +1192,7 @@ async function processImportedData(importedData) {
           console.error(`Error processing URL ${item.url}:`, error);
 
           const campaign = {
-            id: Date.now() + originalIndex,
+            id: Date.now() + Math.random().toString(36).slice(2) + originalIndex,
             url: item.url,
             finalUrl: "Error resolving",
             tags: item.tags,
