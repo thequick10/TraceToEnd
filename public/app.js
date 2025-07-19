@@ -225,7 +225,7 @@ async function addCampaign() {
 
     // Sanitize user input before storing/rendering
     const campaign = {
-      id: Date.now() + Math.random().toString(36).slice(2),
+      id: Date.now(),
       url: url,
       finalUrl: finalUrl,
       tags: escapeHTML(tags),
@@ -1175,7 +1175,7 @@ async function processImportedData(importedData) {
           const now = new Date();
 
           const campaign = {
-            id: Date.now() + Math.random().toString(36).slice(2) + originalIndex, // Sequential IDs
+            id: Date.now() + originalIndex, // Sequential IDs
             url: item.url,
             finalUrl: finalUrl,
             tags: item.tags,
@@ -1192,7 +1192,7 @@ async function processImportedData(importedData) {
           console.error(`Error processing URL ${item.url}:`, error);
 
           const campaign = {
-            id: Date.now() + Math.random().toString(36).slice(2) + originalIndex,
+            id: Date.now() + originalIndex,
             url: item.url,
             finalUrl: "Error resolving",
             tags: item.tags,
