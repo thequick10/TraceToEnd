@@ -256,6 +256,8 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
       });
     }
 
+    page.setDefaultNavigationTimeout(20000);
+
     // Determine navigation timeout (use env variable or fallback to 60 seconds)
     const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 60000;
 
@@ -272,22 +274,14 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
     }
 
     // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
-    let navigationSucceeded = false;
     try {
       await page.goto(inputUrl, { waitUntil: "networkidle2", timeout: timeout });
-      navigationSucceeded = true;
     } catch (err) {
       console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
 
-    // Only wait for selector if navigation succeeded
-    if (navigationSucceeded) {
-      try {
-        await page.waitForSelector("body", {timeout: timeout});
-      } catch (err) {
-        console.error(`[ERROR] Failed waiting for body selector on ${inputUrl}:`, err.message);
-      }
-    }
+    // Optional wait
+    await page.waitForSelector("body", {timeout: 60000});
 
     // Get resolved final URL
     const finalUrl = page.url();
