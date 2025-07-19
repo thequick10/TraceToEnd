@@ -82,12 +82,7 @@ async function detectLocation() {
 function loadCampaigns() {
   const stored = localStorage.getItem("campaigns");
   if (stored) {
-    try{
-      campaigns.push(...JSON.parse(stored));
-    }catch(e){
-      console.error("Error loading campaigns:", e);
-      showNotification("Error loading campaigns", "error");
-    }
+    campaigns.push(...JSON.parse(stored));
     renderTable();
   }
 }
@@ -105,12 +100,7 @@ window.onload = function () {
 };
 
 function saveCampaigns() {
-  try {
-    localStorage.setItem("campaigns", JSON.stringify(campaigns));
-  } catch (err) {
-    showNotification("localStorage quota exceeded", err);
-    console.error("Storage limit reached! Please export or delete some campaigns.", "error");
-  }
+  localStorage.setItem("campaigns", JSON.stringify(campaigns));
 }
 
 function formatDate(date) {
@@ -128,8 +118,8 @@ function formatDate(date) {
 
 function isValidURL(str) {
   try {
-    const url = new URL(str);
-    return url.protocol === "http:" || url.protocol === "https:";
+    new URL(str);
+    return true;
   } catch (_) {
     return false;
   }
@@ -545,7 +535,7 @@ function renderTable() {
           <td>
             <input type="text"
                class="country-input"
-               value="${escapeHTML(c.country || 'US')}"
+               value="${c.country || 'US'}"
                onchange="updateCountry(${c.id}, this.value)"
                style="width:100px; text-transform:uppercase;" 
             />
@@ -1336,8 +1326,6 @@ function showNotification(message, type = "success") {
         max-width: 300px;
       `;
   notification.textContent = message;
-  notification.setAttribute("role", "alert");
-  notification.setAttribute("aria-live", "assertive");
 
   document.body.appendChild(notification);
 
