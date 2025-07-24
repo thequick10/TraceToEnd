@@ -666,11 +666,14 @@ function hideModal() {
 document.getElementById("cancelBtn").addEventListener("click", hideModal);
 document.getElementById("exitBtn").addEventListener("click", hideModal);
 document.getElementById("deleteBtn").addEventListener("click", () => {
-  campaigns.splice(0, campaigns.length);  // Clear campaigns
+  //campaigns.splice(0, campaigns.length);  // Clear campaigns
+  campaigns.length = 0;
   localStorage.removeItem("campaigns"); // Clear localStorage as well
   renderTable();
   saveCampaigns();
   hideModal();
+
+  showNotification("🗑️ All campaigns deleted successfully.", "info");
 });
 
 function copyToClipboard(text) {
