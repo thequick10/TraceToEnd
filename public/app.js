@@ -125,7 +125,7 @@ function isValidURL(str) {
   }
 }
 
-async function resolveFinalUrl(inputUrl, region = "US") {
+async function resolveFinalUrl(inputUrl, region = "US", uaType = "desktop") {
     const fallback = "Error resolving";
   
     try {
@@ -143,17 +143,20 @@ async function resolveFinalUrl(inputUrl, region = "US") {
         return fallback;
       }
   
-      // ✅ Use region passed as argument (not from dropdown)
+      // ✅ Use region and uaType passed as argument (not from dropdown)
       const selectedRegion = region.toUpperCase() || "US";
+      const selectedUaType = uaType || "desktop";
   
       // Safely build query string
       const params = new URLSearchParams({
         url: trimmedUrl,
-        region: selectedRegion
+        region: selectedRegion,
+        uaType: selectedUaType
       });
   
       const requestUrl = `/resolve?${params.toString()}`;
-      console.log(`🌐 Fetching with region [${selectedRegion}]:`, requestUrl);
+      // console.log(`🌐 Fetching with region [${selectedRegion}]:`, requestUrl);
+      console.log(`🌐 Fetching with region [${selectedRegion}] and uaType [${selectedUaType}]:`, requestUrl);
   
       const response = await fetch(requestUrl);
       if (!response.ok) throw new Error(`Server responded with ${response.status}`);
@@ -161,8 +164,8 @@ async function resolveFinalUrl(inputUrl, region = "US") {
       const data = await response.json();
   
       if (data?.finalUrl) {
-        // console.log("✅ Final URL:", data.finalUrl);
-        console.log(`✅ Final URL for [${selectedRegion}]:`, data.finalUrl);
+        // console.log(`✅ Final URL for [${selectedRegion}]:`, data.finalUrl);
+        console.log(`✅ Final URL for [${selectedRegion}] [${selectedUaType}]:`, data.finalUrl);
         if (data.regionMatch !== undefined) {
           console.log(`🔍 Region verification: Requested [${data.requestedRegion}] vs Actual [${data.actualRegion}] - ${data.regionMatch ? '✅ REGION MATCHED' : '❌ REGION MISMATCH'}`);
         }
@@ -183,10 +186,14 @@ async function addCampaign() {
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
   const country = document.getElementById("url-country").value || "US";
+  const uaType = document.getElementById("ua-type") ? document.getElementById("ua-type").value : "desktop";
+
+  //Validate inputs
   if (!url) return showNotification("Campaign URL is required", "error" );
   if (!tags) return showNotification("Campaign tags are required", "error" );
   if (!isValidURL(url)) return showNotification("Please enter a valid URL", "error" );
   if (!country) return showNotification("Please select a country", "error" );
+  if (!uaType) return showNotification("Please select user-agent type", "error");
 
   loadingRow.style.display = "table-row";
 
@@ -194,8 +201,8 @@ async function addCampaign() {
   showLoadingToast("Please wait, While we're fetching the URL...");
 
   const now = new Date();
-  const finalUrl = await resolveFinalUrl(url, country);
-  console.log(`🌍 Added campaign for ${country}:`, finalUrl);
+  const finalUrl = await resolveFinalUrl(url, country, uaType);
+  console.log(`🌍 Added campaign for ${country} (${uaType}):`, finalUrl);
 
   // 👉 Remove loader toast AFTER resolving
   removeLoadingToast();
@@ -207,6 +214,7 @@ async function addCampaign() {
     tags,
     date: formatDate(now),
     country: country,
+    uaType: uaType,
   };
 
   campaigns.push(campaign);
@@ -221,9 +229,10 @@ async function addCampaign() {
   document.getElementById("campaign-tags").value = "";
   //document.getElementById("url-country").value = "";
   $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
+  if (document.getElementById("ua-type")) document.getElementById("ua-type").value = " ";
 
   // ✅ Show success notification
-  showNotification(`Resolution for ${country} added successfully!`, "success");
+  showNotification(`Resolution for ${country} (${uaType}) added successfully!`, "success");
 }
 
 // Replace your existing refreshAllUrls function with this improved version
@@ -427,7 +436,8 @@ async function refreshSingleUrl(campaignId) {
   }
 
   const campaignRegion = (campaign.country || "US").toUpperCase();
-  console.log(`🔄 Refreshing with region: [${campaignRegion}]`);  
+  const campaignUaType = campaign.uaType || "desktop";
+  console.log(`🔄 Refreshing with region: [${campaignRegion}], uaType: [${campaignUaType}]`); 
 
   const originalFinalUrl = campaign.finalUrl;
 
@@ -438,7 +448,7 @@ async function refreshSingleUrl(campaignId) {
   renderTable();
 
   try {
-    const finalUrl = await resolveFinalUrl(campaign.url, campaignRegion);
+    const finalUrl = await resolveFinalUrl(campaign.url, campaignRegion, campaignUaType);
 
     if (
       finalUrl &&
@@ -448,7 +458,7 @@ async function refreshSingleUrl(campaignId) {
     ) {
       campaign.finalUrl = finalUrl;
       campaign.date = formatDate(new Date());
-      showNotification(`✅ URL refreshed successfully! with region [${campaignRegion}]!`, "success");
+      showNotification(`✅ URL refreshed successfully! with region [${campaignRegion}] and uaType [${campaignUaType}]!`, "success");
     } else {
       throw new Error("Invalid resolution result");
     }
@@ -522,6 +532,7 @@ function renderTable() {
             />
           </td>
           <td contenteditable="true" onblur="updateTags(${c.id}, this.innerText)">${c.tags}</td>
+          <td>${c.uaType === 'mobile' ? '📱 Mobile' : '🖥️ Desktop'}</td>
           <td>
             <button class="btn-danger" onclick="confirmDelete(${c.id})">🗑️ Delete</button>
             <button class="copy-btn" onclick="copyToClipboard('${c.finalUrl}')" title="Copy URL">📋 Copy</button>
@@ -722,7 +733,7 @@ function copyToClipboard(text) {
 function exportCSV() {
   let csv = "Date,Campaign URL,Final URL,Country,Tags\n";
   campaigns.forEach((c) => {
-    csv += `"${c.date}","${c.url}","${c.finalUrl}","${c.country || 'US'}","${c.tags}"\n`;
+    csv += `"${c.date}","${c.url}","${c.finalUrl}","${c.country || 'US'}","${c.tags}","${c.uaType || 'desktop'}"\n`;
   });
 
   // Set UTF-8 encoding
@@ -945,6 +956,13 @@ function parseCSVFile(file) {
             h.toLowerCase().includes("geo")
         );
 
+        const uaTypeIndex = headers.findIndex(
+          (h) =>
+            h.toLowerCase().includes("ua-type") ||
+            h.toLowerCase().includes("user-agent") ||
+            h.toLowerCase().includes("ua")
+        );
+
         if (urlIndex === -1) {
           throw new Error(
             'No URL column found. Please ensure your CSV has a column with "URL", "Link", or "Campaign" in the header.'
@@ -971,9 +989,13 @@ function parseCSVFile(file) {
               countryIndex !== -1 && values[countryIndex]
               ? values[countryIndex].trim()
               : "US";
+            const uaType =
+              uaTypeIndex !== -1 && values[uaTypeIndex]
+                ? values[uaTypeIndex].trim()
+                : "desktop";
 
             if (isValidURL(url)) {
-              data.push({ url, tags, country });
+              data.push({ url, tags, country, uaType });
             }
           }
         }
@@ -1030,7 +1052,11 @@ function parseXLSXFile(file) {
         const countryIndex = headers.findIndex(
           (h) =>
             h.includes("country") || h.includes("location") || h.includes("region") || h.includes("geo")
-        )
+        );
+        const uaTypeIndex = headers.findIndex(
+          (h) =>
+            h.includes("ua-type") || h.includes("user-agent")
+        );
 
         if (urlIndex === -1) {
           throw new Error(
@@ -1056,8 +1082,13 @@ function parseXLSXFile(file) {
             ? String(row[countryIndex]).trim()
             : "US";
 
+          const uaType =
+            uaTypeIndex !== -1 && row[uaTypeIndex]
+              ? String(row[uaTypeIndex]).trim()
+              : "desktop";
+
           if (url && isValidURL(url)) {
-            processedData.push({ url, tags, country });
+            processedData.push({ url, tags, country, uaType });
           }
         }
 
@@ -1145,7 +1176,7 @@ async function processImportedData(importedData) {
         const originalIndex = batchStartIndex + batchIndex;
 
         try {
-          const finalUrl = await resolveFinalUrl(item.url, item.country || "US");
+          const finalUrl = await resolveFinalUrl(item.url, item.country || "US", item.uaType || "desktop");
           const now = new Date();
 
           const campaign = {
@@ -1157,6 +1188,7 @@ async function processImportedData(importedData) {
             date: formatDate(now),
             originalIndex: originalIndex, // Track original position
             importBatch: Math.floor(i / batchSize), // Track which batch this belongs to
+            uaType: item.uaType || "desktop", // Store uaType
           };
 
           // Store in map with original index as key
@@ -1174,6 +1206,7 @@ async function processImportedData(importedData) {
             date: formatDate(new Date()),
             originalIndex: originalIndex,
             importBatch: Math.floor(i / batchSize),
+            uaType: item.uaType || "desktop", // Store uaType
           };
 
           campaignMap.set(originalIndex, campaign);

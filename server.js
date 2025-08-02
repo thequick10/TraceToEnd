@@ -219,23 +219,45 @@ const userAgents = {
 };
 
 // Helper: Randomly pick desktop or mobile UA and related settings
-function getRandomUserAgent() {
-  const type = Math.random() < 0.5 ? 'desktop' : 'mobile';
-  const uaList = userAgents[type];
+// function getRandomUserAgent() {
+//   const type = Math.random() < 0.5 ? 'desktop' : 'mobile';
+//   const uaList = userAgents[type];
+//   const userAgent = uaList[Math.floor(Math.random() * uaList.length)];
+//   return { userAgent, isMobile: type === 'mobile' };
+// }
+
+// Helper: Randomly pick desktop or mobile UA and related settings
+function getRandomUserAgent(type) {
+  let uaType = type;
+  if (!uaType || (uaType !== 'desktop' && uaType !== 'mobile')) {
+    uaType = Math.random() < 0.5 ? 'desktop' : 'mobile';
+  }
+  const uaList = userAgents[uaType];
   const userAgent = uaList[Math.floor(Math.random() * uaList.length)];
-  return { userAgent, isMobile: type === 'mobile' };
+  return { userAgent, isMobile: uaType === 'mobile', uaType };
 }
 
 // Main Puppeteer logic
-async function resolveWithBrowserAPI(inputUrl, region = "US") {
+async function resolveWithBrowserAPI(inputUrl, region = "US", uaType) {
   const browserWSEndpoint = getBrowserWss(region);
   const browser = await puppeteer.connect({ browserWSEndpoint });
 
   try {
     const page = await browser.newPage();
+    
+    // ⬇️ Block unnecessary resources to speed things up
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      const blockedResources = ["image", "stylesheet", "font", "media", "other"];
+      if (blockedResources.includes(req.resourceType())) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
 
     // ✅ Set custom User-Agent before navigating
-    const { userAgent, isMobile } = getRandomUserAgent();
+    const { userAgent, isMobile } = getRandomUserAgent(uaType);
     console.log(`[INFO] Using ${isMobile ? 'Mobile' : 'Desktop'} User-Agent:\n${userAgent}`);
     await page.setUserAgent(userAgent);
 
@@ -304,9 +326,9 @@ async function resolveWithBrowserAPI(inputUrl, region = "US") {
   }
 }
 
-// API route: /resolve?url=https://domain.com&region=ua
+// API route: /resolve?url=https://domain.com&region=ua - /resolve?url=https://domain.com&region=ua&uaType=desktop|mobile
 app.get("/resolve", async (req, res) => {
-  const { url: inputUrl, region = "US" } = req.query;
+  const { url: inputUrl, region = "US", uaType } = req.query;
 
   if (!inputUrl) {
     return res.status(400).json({ error: "Missing URL parameter" });
@@ -319,10 +341,11 @@ app.get("/resolve", async (req, res) => {
   }
 
   console.log(`⌛ Requested new URL: ${inputUrl}`);
-  console.log(`🌐 Resolving URL for region [${region}]:`, inputUrl);
+  // console.log(`🌐 Resolving URL for region [${region}]:`, inputUrl);
+  console.log(`🌐 Resolving URL for region [${region}] with uaType [${uaType}]:`, inputUrl);
 
   try {
-    const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region);
+    const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region, uaType);
 
     if (finalUrl) {
       resolutionStats.success++;
@@ -367,7 +390,8 @@ app.get("/resolve", async (req, res) => {
       hasMtkSource: finalUrl?.includes("mkt_source="),
       hasTduId: finalUrl?.includes("tduid="),
       hasPublisherId: finalUrl?.includes("publisherId="),
-      ipData // Region detection info
+      ipData, // Region detection info
+      uaType
     });
   } catch (err) {
     resolutionStats.failure++;
@@ -381,16 +405,16 @@ app.get("/resolve", async (req, res) => {
 });
 
 //Allow users to request resolution across multiple regions at once, getting all the resolved URLs at the same time.
-// Endpoint to access this - /resolve-multiple?url=https://domain.com&regions=us,ca,ae
+// Endpoint to access this - /resolve-multiple?url=https://domain.com&regions=us,ca,ae - https://domain.com&regions=us,ca,ae&uaType=desktop|mobile
 app.get('/resolve-multiple', async (req, res) => {
-  const { url: inputUrl, regions } = req.query;
+  const { url: inputUrl, regions, uaType } = req.query;
 
   if (!inputUrl || !regions) {
     return res.status(400).json({ error: "Missing parameters" });
   }
 
   const regionList = regions.split(',');
-  const promises = regionList.map(region => resolveWithBrowserAPI(inputUrl, region));
+  const promises = regionList.map(region => resolveWithBrowserAPI(inputUrl, region, uaType));
   const results = await Promise.all(promises);
 
   results.forEach((result, i) => {
