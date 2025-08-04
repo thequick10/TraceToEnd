@@ -65,16 +65,16 @@ setTimeout(() => {
 
 // Define authentication configuration
 const authConfig = {
-  users: { 'admin': 'Admin@$%6677' },
+  users: { 'admin': 'Admin@quick10' },
   challenge: true,
   realm: 'Private Area',
   unauthorizedResponse: req => '🚫 Unauthorized Access',
 };
 
 // Apply Basic Authentication to multiple routes
-//app.use('/', basicAuth(authConfig));
+app.use('/', basicAuth(authConfig));
 //app.use('/resolve', basicAuth(authConfig));
-//app.use('/analytics', basicAuth(authConfig));
+// app.use('/analytics', basicAuth(authConfig));
 //app.use('/resolve-multiple', basicAuth(authConfig));
 
 // Serve static frontend
