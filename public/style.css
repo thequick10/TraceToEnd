@@ -653,7 +653,7 @@ input::file-selector-button {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   z-index: 999;
   transition: all 0.5s ease;
-  display: flex;
+  display: none;
   justify-content: center;
 }
 
@@ -715,6 +715,7 @@ input::file-selector-button {
 /* ---------- Responsive behavior on small screens ---------- */
 @media (max-width: 768px) {
   .floating-navbar {
+    display:flex;
     top: auto;
     bottom: 20px;
     left: 50%;
