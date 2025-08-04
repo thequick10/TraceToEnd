@@ -229,7 +229,7 @@ const userAgents = {
 // Helper: Randomly pick desktop or mobile UA and related settings
 function getRandomUserAgent(type) {
   let uaType = type;
-  if (!uaType || (uaType !== 'desktop' && uaType !== 'mobile')) {
+  if (!uaType || uaType === 'random' || (uaType !== 'desktop' && uaType !== 'mobile')) {
     uaType = Math.random() < 0.5 ? 'desktop' : 'mobile';
   }
   const uaList = userAgents[uaType];

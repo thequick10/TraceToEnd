@@ -125,7 +125,7 @@ function isValidURL(str) {
   }
 }
 
-async function resolveFinalUrl(inputUrl, region = "US", uaType = "desktop") {
+async function resolveFinalUrl(inputUrl, region = "US", uaType = "random") {
     const fallback = "Error resolving";
   
     try {
@@ -145,7 +145,7 @@ async function resolveFinalUrl(inputUrl, region = "US", uaType = "desktop") {
   
       // ✅ Use region and uaType passed as argument (not from dropdown)
       const selectedRegion = region.toUpperCase() || "US";
-      const selectedUaType = uaType || "desktop";
+      const selectedUaType = uaType || "random";
   
       // Safely build query string
       const params = new URLSearchParams({
@@ -186,14 +186,13 @@ async function addCampaign() {
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
   const country = document.getElementById("url-country").value || "US";
-  const uaType = document.getElementById("ua-type") ? document.getElementById("ua-type").value : "desktop";
+  const uaType = document.getElementById("ua-type") ? document.getElementById("ua-type").value : "random";
 
   //Validate inputs
   if (!url) return showNotification("Campaign URL is required", "error" );
   if (!tags) return showNotification("Campaign tags are required", "error" );
   if (!isValidURL(url)) return showNotification("Please enter a valid URL", "error" );
   if (!country) return showNotification("Please select a country", "error" );
-  if (!uaType) return showNotification("Please select user-agent type", "error");
 
   loadingRow.style.display = "table-row";
 
@@ -229,7 +228,7 @@ async function addCampaign() {
   document.getElementById("campaign-tags").value = "";
   //document.getElementById("url-country").value = "";
   $("#url-country").val("").trigger("change"); // Reset Select2 dropdown properly
-  if (document.getElementById("ua-type")) document.getElementById("ua-type").value = " ";
+  if (document.getElementById("ua-type")) document.getElementById("ua-type").value = "random";
 
   // ✅ Show success notification
   showNotification(`Resolution for ${country} (${uaType}) added successfully!`, "success");
@@ -436,7 +435,7 @@ async function refreshSingleUrl(campaignId) {
   }
 
   const campaignRegion = (campaign.country || "US").toUpperCase();
-  const campaignUaType = campaign.uaType || "desktop";
+  const campaignUaType = campaign.uaType || "random";
   console.log(`🔄 Refreshing with region: [${campaignRegion}], uaType: [${campaignUaType}]`); 
 
   const originalFinalUrl = campaign.finalUrl;
@@ -532,7 +531,7 @@ function renderTable() {
             />
           </td>
           <td contenteditable="true" onblur="updateTags(${c.id}, this.innerText)">${c.tags}</td>
-          <td>${c.uaType === 'mobile' ? '📱 Mobile' : '🖥️ Desktop'}</td>
+          <td>${c.uaType === 'mobile' ? '📱 Mobile' : (c.uaType === 'desktop' ? '🖥️ Desktop' : '🔄 Rotating')}</td>
           <td>
             <button class="btn-danger" onclick="confirmDelete(${c.id})">🗑️ Delete</button>
             <button class="copy-btn" onclick="copyToClipboard('${c.finalUrl}')" title="Copy URL">📋 Copy</button>
@@ -731,9 +730,9 @@ function copyToClipboard(text) {
 //   a.click();
 // }
 function exportCSV() {
-  let csv = "Date,Campaign URL,Final URL,Country,Tags\n";
+  let csv = "Date,Campaign URL,Final URL,Country,Tags, uaType\n";
   campaigns.forEach((c) => {
-    csv += `"${c.date}","${c.url}","${c.finalUrl}","${c.country || 'US'}","${c.tags}","${c.uaType || 'desktop'}"\n`;
+    csv += `"${c.date}","${c.url}","${c.finalUrl}","${c.country || 'US'}","${c.tags}","${c.uaType || 'random'}"\n`;
   });
 
   // Set UTF-8 encoding
@@ -992,7 +991,7 @@ function parseCSVFile(file) {
             const uaType =
               uaTypeIndex !== -1 && values[uaTypeIndex]
                 ? values[uaTypeIndex].trim()
-                : "desktop";
+                : "random";
 
             if (isValidURL(url)) {
               data.push({ url, tags, country, uaType });
@@ -1055,7 +1054,7 @@ function parseXLSXFile(file) {
         );
         const uaTypeIndex = headers.findIndex(
           (h) =>
-            h.includes("ua-type") || h.includes("user-agent")
+            h.includes("ua-type") || h.includes("user-agent") || h.includes("uaType")
         );
 
         if (urlIndex === -1) {
@@ -1085,7 +1084,7 @@ function parseXLSXFile(file) {
           const uaType =
             uaTypeIndex !== -1 && row[uaTypeIndex]
               ? String(row[uaTypeIndex]).trim()
-              : "desktop";
+              : "random";
 
           if (url && isValidURL(url)) {
             processedData.push({ url, tags, country, uaType });
@@ -1176,7 +1175,7 @@ async function processImportedData(importedData) {
         const originalIndex = batchStartIndex + batchIndex;
 
         try {
-          const finalUrl = await resolveFinalUrl(item.url, item.country || "US", item.uaType || "desktop");
+          const finalUrl = await resolveFinalUrl(item.url, item.country || "US", item.uaType || "random");
           const now = new Date();
 
           const campaign = {
@@ -1188,7 +1187,7 @@ async function processImportedData(importedData) {
             date: formatDate(now),
             originalIndex: originalIndex, // Track original position
             importBatch: Math.floor(i / batchSize), // Track which batch this belongs to
-            uaType: item.uaType || "desktop", // Store uaType
+            uaType: item.uaType || "random", // Store uaType
           };
 
           // Store in map with original index as key
@@ -1206,7 +1205,7 @@ async function processImportedData(importedData) {
             date: formatDate(new Date()),
             originalIndex: originalIndex,
             importBatch: Math.floor(i / batchSize),
-            uaType: item.uaType || "desktop", // Store uaType
+            uaType: item.uaType || "random", // Store uaType
           };
 
           campaignMap.set(originalIndex, campaign);
