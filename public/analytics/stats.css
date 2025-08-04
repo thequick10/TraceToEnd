@@ -230,7 +230,7 @@
       text-align: center;
       box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
-    .stat-card2 .stat-card7{
+    .stat-card2, .stat-card7{
       background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
       color: white;
       padding: 25px;
@@ -246,7 +246,7 @@
       text-align: center;
       box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     }
-    .stat-card4 .stat-card6{
+    .stat-card4, .stat-card6{
       background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
       color: white;
       padding: 25px;
