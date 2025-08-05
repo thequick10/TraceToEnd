@@ -70,12 +70,21 @@ A powerful and efficient URL resolution service that tracks campaign parameters,
   - Restore previous URL on failure
 - 📈 **Progress Tracking**: Visual progress indicators
 
+## 🧑‍💻 User Agent Support
+- **Desktop**: Emulates a desktop browser user agent.
+- **Mobile**: Emulates a mobile browser user agent.
+- **Random (Rotating)**: Randomly selects a desktop or mobile user agent for each request. This is the default option and helps simulate diverse real-world traffic.
+
+You can select the user agent type from the frontend dropdown. The selected type is sent to the backend and used for all URL resolutions and analytics.
+
 ### 💫 Additional Features
 - 📋 **Clipboard Support**: One-click URL copying
 - ✏️ **Inline Editing**: Edit campaign URLs and tags directly
 - 🗑️ **Data Management**: Delete individual or all campaigns
 - 📱 **Responsive Design**: Works on desktop and mobile
 - 🔔 **Notifications**: Beautiful toast notifications for all actions
+- 🖥 **User Agent Selection**: Choose between Desktop, Mobile, or Random (rotating) user agents for each request. The Random option will select a new user agent for every request, simulating real-world browsing patterns.
+- ⏱️ **Timing Statistics Dashboard**: Dedicated dashboard to track and analyze the time taken to resolve URLs, with filtering, sorting, and CSV export capabilities.
 
 ## 🛠️ Installation
 
@@ -120,8 +129,14 @@ The server provides multiple endpoints for URL resolution with different levels 
 - `GET /resolve?url=<URL>&region=<REGION_CODE>`  
   Resolve a single URL for a specified region.
 
+- `GET /resolve?url=<URL>&region=<REGION_CODE>&uaType=desktop|mobile`
+  Resolve a single URL for a specified region with a specific user agent type.
+
 - `GET /resolve-multiple?url=<URL>&regions=us,ca,ae`  
   Resolve a URL across multiple regions simultaneously.
+
+- `GET /resolve-multiple?url=<URL>&regions=us,ca,ae&uaTyp=desktop|mobile`
+  Resolve a URL across multiple regions simultaneously with a specific user agent type.
 
 - `GET /zone-usage?from=YYYY-MM-DD&to=YYYY-MM-DD`  
   Retrieve BrightData API usage statistics for the configured zone.
@@ -132,17 +147,38 @@ The server provides multiple endpoints for URL resolution with different levels 
 - `GET /system-info`  
   Get system health and resource usage information.
 
-- `GET /resolution-stats`
-  Get resolution stat information directly in browser using this endpoint.
-
-- `GET /analytics/usage.html`  
-  Access the analytics usage page (requires authentication).
-  
-- `GET /resolution-stats/resolutions.html`
-  Access the URL resolution stats to track how many url succeed and failed in respective.
-
 - `GET /ip`  
   Returns the client IP address.
+
+## Campaign link generator
+- **Dashboard:** Access the dashboard at `https://your-campaign-url.com/` (replace with your actual campaign URL).
+- **Add Campaigns:** Enter campaign URL, tags/notes, and select country, then click "Add Campaign".
+- **Refresh URLs:** Refresh individual or all campaign URLs to get updated final resolved URLs.
+- **Import/Export:** Import campaigns from CSV or XLSX files; export current campaigns to CSV.
+- **Filtering and Sorting:** Search campaigns, filter by date range, and sort by newest, oldest, or import order.
+- **Delete Campaigns:** Delete individual or all campaigns.
+- **Edit Campaigns:** Edit campaign details, including URL, tags, and notes.
+- **User Agent Selection:** Select user agent type (desktop or mobile) for each campaign.
+
+## API Request Analytics
+- Access the dashboard at `/analytics/stats.html`
+- View campaign statistics, including date, total requests and bandwidth etc.
+- Filter by date range & search requests by date.
+- Export data to CSV.
+
+## URL Resolution Stats
+- Access the dashboard at `/resolution-stats/resolutions.html`
+- View URL resolution statistics, including total requests, successful and failed requests, and bandwidth etc.
+- Filter by date range & search requests by date.
+- Export data to CSV.
+- View the stats in a table format.
+- View stats by regional performance 
+
+## ⏱️ Timing Statistics Dashboard
+- Access the dashboard at `/timing-stat/timing-stat.html`.
+- View daily statistics for total time, average time per URL, and request counts.
+- Filter by date range, sort results, and export timing data as CSV.
+- The dashboard is fully responsive and mobile-friendly.
 
 ### Sample Response
 ```json
@@ -156,13 +192,6 @@ The server provides multiple endpoints for URL resolution with different levels 
   //more paramenters
 }
 ```
-
-## Frontend Usage
-
-- **Add Campaigns:** Enter campaign URL, tags/notes, and select country, then click "Add Campaign".
-- **Refresh URLs:** Refresh individual or all campaign URLs to get updated final resolved URLs.
-- **Import/Export:** Import campaigns from CSV or XLSX files; export current campaigns to CSV.
-- **Filtering and Sorting:** Search campaigns, filter by date range, and sort by newest, oldest, or import order.
 
 ## 🚀 Deployment
 

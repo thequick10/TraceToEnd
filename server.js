@@ -358,6 +358,10 @@ app.get("/resolve", async (req, res) => {
       resolutionStats.perRegion[region].failure++;
     }
 
+    // Save timing stat (date, url, time)
+    const today = new Date().toISOString().slice(0, 10);
+    await appendTimingStat({ date: today, url: inputUrl, time: timeTaken });
+    
     console.log(`URL Resolution Completed For: ${inputUrl}`);
     console.log(`→ Original URL: ${inputUrl}`);
     
@@ -613,6 +617,47 @@ app.get("/resolution-stats", (req, res) => {
     perRegion: resolutionStats.perRegion,
     failedUrls: resolutionStats.failedUrls
   });
+});
+
+const TIMING_STATS_FILE = path.join(__dirname, 'public', 'time-stat', 'time-stats.json');
+
+async function appendTimingStat(stat) {
+  let stats = [];
+  try {
+    const data = await fs.readFile(TIMING_STATS_FILE, 'utf-8');
+    stats = JSON.parse(data);
+  } catch (e) {
+    // File may not exist yet
+    stats = [];
+  }
+  stats.push(stat);
+  // Keep only last 31 days
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 31);
+  stats = stats.filter(s => new Date(s.date) >= cutoff);
+  await fs.writeFile(TIMING_STATS_FILE, JSON.stringify(stats, null, 2));
+}
+
+app.get('/timing-stats', async (req, res) => {
+  try {
+    let stats = [];
+    try {
+      const data = await fs.readFile(TIMING_STATS_FILE, 'utf-8');
+      stats = JSON.parse(data);
+    } catch (e) {
+      stats = [];
+    }
+    // Optional: filter by date range
+    const { start, end } = req.query;
+    if (start || end) {
+      stats = stats.filter(row => {
+        return (!start || row.date >= start) && (!end || row.date <= end);
+      });
+    }
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load timing stats', details: err.message });
+  }
 });
 
 // IP endpoint

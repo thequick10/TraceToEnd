@@ -328,6 +328,26 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    .table-header-time {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 16px 16px 0px 0px;
+    }
+    
+    @media (max-width: 768px) {
+        .table-header-time {
+          flex-direction: column;
+          gap: 15px;
+          align-items: flex-start;
+          padding: 15px 20px;
+          border-radius: 16px 16px 0px 0px;
+      }
+    }
+
     .data-table th,
     .data-table td {
       padding: 16px 20px;

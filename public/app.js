@@ -185,7 +185,7 @@ async function addCampaign() {
   const url = document.getElementById("campaign-url").value;
   const tags = document.getElementById("campaign-tags").value;
   const loadingRow = document.getElementById("loadingRow");
-  const country = document.getElementById("url-country").value || "US";
+  const country = document.getElementById("url-country").value;
   const uaType = document.getElementById("ua-type") ? document.getElementById("ua-type").value : "random";
 
   //Validate inputs

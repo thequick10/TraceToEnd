@@ -1,7 +1,7 @@
 // Dynamically injects the navbar into #navbar-root
 (async function() {
     // Load HTML
-    const resp = await fetch('/components/navbar.html');
+    const resp = await fetch('/components/navbar/navbar.html');
     const html = await resp.text();
     const root = document.getElementById('navbar-root');
     if (!root) return;
@@ -13,7 +13,7 @@
       const link = document.createElement('link');
       link.id = cssId;
       link.rel = 'stylesheet';
-      link.href = '/components/navbar.css';
+      link.href = '/components/navbar/navbar.css';
       document.head.appendChild(link);
     }
   
