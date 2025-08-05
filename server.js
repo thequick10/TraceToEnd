@@ -157,7 +157,8 @@ const regionZoneMap = {
   MX: process.env.BRIGHTDATA_MX_PROXY,
   MY: process.env.BRIGHTDATA_MY_PROXY,
   IT: process.env.BRIGHTDATA_IT_PROXY,
-  TH: process.env.BRIGHTDATA_TH_PROXY
+  TH: process.env.BRIGHTDATA_TH_PROXY,
+  NL: process.env.BRIGHTDATA_NL_PROXY
 };
 
 //Make sure all proxy values exist at runtime or fail fast on startup.
@@ -345,7 +346,10 @@ app.get("/resolve", async (req, res) => {
   console.log(`🌐 Resolving URL for region [${region}] with uaType [${uaType}]:`, inputUrl);
 
   try {
+    const startTime = Date.now();
     const { finalUrl, ipData } = await resolveWithBrowserAPI(inputUrl, region, uaType);
+    const endTime = Date.now();
+    const timeTaken = endTime - startTime;
 
     if (finalUrl) {
       resolutionStats.success++;
