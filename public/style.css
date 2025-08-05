@@ -873,6 +873,7 @@ input::file-selector-button {
   color: #333;
   font-family: 'Albert Sans', sans-serif;
   word-wrap: break-word;
+  text-align: center;
 }
 
 @keyframes spin {
