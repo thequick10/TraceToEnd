@@ -682,7 +682,7 @@ app.get('/ip', (req, res) => {
 
 //Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {
-  const url = 'https://tracetoend.onrender.com/'; // Replace with your actual Render URL
+  const url = 'https://tracetoend.onrender.com/ip'; // Replace with your actual Render URL
 
   https.get(url, (res) => {
     console.log(`[KEEP-AWAKE] Pinged self. Status code: ${res.statusCode}`);
