@@ -747,6 +747,7 @@
       color: #333;
       font-family: 'Albert Sans', sans-serif;
       word-wrap: break-word;
+      text-align: center;
     }
 
     @keyframes spin {
@@ -762,6 +763,7 @@
 
       .loading-text {
         font-size: 0.95rem;
+        text-align: center;
       }
 
       .spinner {
