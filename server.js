@@ -348,7 +348,7 @@ async function appendTimingStat(stat) {
   await fs.writeFile(TIMING_STATS_FILE, JSON.stringify(stats, null, 2));
 }
 
-app.get('/timing-stats', async (req, res) => {
+app.get('/time-stats', async (req, res) => {
   try {
     let stats = [];
     try {
