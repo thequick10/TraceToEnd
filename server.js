@@ -159,7 +159,28 @@ const regionZoneMap = {
   MY: process.env.BRIGHTDATA_MY_PROXY,
   IT: process.env.BRIGHTDATA_IT_PROXY,
   TH: process.env.BRIGHTDATA_TH_PROXY,
-  NL: process.env.BRIGHTDATA_NL_PROXY
+  NL: process.env.BRIGHTDATA_NL_PROXY,
+  AR: process.env.BRIGHTDATA_AR_PROXY,
+  BY: process.env.BRIGHTDATA_BY_PROXY,
+  RU: process.env.BRIGHTDATA_RU_PROXY,
+  IE: process.env.BRIGHTDATA_IE_PROXY,
+  HK: process.env.BRIGHTDATA_HK_PROXY,
+  KZ: process.env.BRIGHTDATA_KZ_PROXY,
+  NZ: process.env.BRIGHTDATA_NZ_PROXY,
+  TR: process.env.BRIGHTDATA_TR_PROXY,
+  DK: process.env.BRIGHTDATA_DK_PROXY,
+  GR: process.env.BRIGHTDATA_GR_PROXY,
+  NO: process.env.BRIGHTDATA_NO_PROXY,
+  AT: process.env.BRIGHTDATA_AT_PROXY,
+  IS: process.env.BRIGHTDATA_IS_PROXY,
+  SE: process.env.BRIGHTDATA_SE_PROXY,
+  PT: process.env.BRIGHTDATA_PT_PROXY,
+  CH: process.env.BRIGHTDATA_CH_PROXY,
+  BE: process.env.BRIGHTDATA_BE_PROXY,
+  PH: process.env.BRIGHTDATA_PH_PROXY,
+  IL: process.env.BRIGHTDATA_IL_PROXY,
+  MD: process.env.BRIGHTDATA_MD_PROXY,
+  RO: process.env.BRIGHTDATA_RO_PROXY
 };
 
 //Make sure all proxy values exist at runtime or fail fast on startup.
