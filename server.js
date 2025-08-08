@@ -63,20 +63,36 @@ setTimeout(() => {
 
 }, getDelayUntilNextReset());
 
+// Session middleware
+app.use(session({
+  secret: process.env.SECRET_SESSION_KEY,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 day
+}));
 
-// Define authentication configuration
-const authConfig = {
-  users: { 'admin': 'Admin@quick10' },
-  challenge: true,
-  realm: 'Private Area',
-  unauthorizedResponse: req => '🚫 Unauthorized Access',
-};
-
-// Apply Basic Authentication to multiple routes
-app.use('/', basicAuth(authConfig));
-//app.use('/resolve', basicAuth(authConfig));
-// app.use('/analytics', basicAuth(authConfig));
-//app.use('/resolve-multiple', basicAuth(authConfig));
+// Middleware to protect all routes except login and error
+app.use((req, res, next) => {
+  const publicPaths = ['/login', '/auth/error.html'];
+  if (
+    publicPaths.includes(req.path) ||
+    req.path.startsWith('/public/') ||
+    req.path.startsWith('/style.css') ||
+    req.path.startsWith('/app.js') ||
+    req.path.startsWith('/favicon.ico')
+  ) {
+    return next();
+  }
+  if (req.session && req.session.authenticated) {
+    return next();
+  }
+  // If not authenticated, redirect to login
+  if (req.accepts('html')) {
+    return res.redirect('/login');
+  } else {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+});
 
 // Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
@@ -101,15 +117,19 @@ if (!allowedOrigins) {
 console.log('[CORS] Allowed origins:', allowedOrigins);
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: '*',
+  credentials: false
 }));
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   credentials: false
+// }));
 // End CORS setup
 
 app.use(express.json({ limit: '10mb' }));
@@ -687,6 +707,33 @@ app.get("/resolution-stats", (req, res) => {
   });
 });
 
+// Serve the login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'auth', 'login.html'));
+});
+
+// Handle login POST
+app.post('/login', express.urlencoded({ extended: true }), (req, res) => {
+  const { username, password } = req.body;
+
+  const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    req.session.authenticated = true;
+    return res.redirect('/index.html');
+  } else {
+    return res.redirect('/auth/error.html');
+  }
+});
+
+// Logout route
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => {
+    res.redirect('/login');
+  });
+});
+
 // IP endpoint
 app.get('/ip', (req, res) => {
   const rawIp =
@@ -700,6 +747,19 @@ app.get('/ip', (req, res) => {
   console.log(`Client IP: ${clientIp}`);
   res.send({ ip : clientIp });
 });
+
+app.get('/puppeteer-status', async (req, res) => {
+  try {
+    const browser = await puppeteer.connect({ browserWSEndpoint: getBrowserWss("US") });
+    const page = await browser.newPage();
+    await page.close();
+    await browser.disconnect();
+    res.json({ status: "ok", message: "Puppeteer connection is working." });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+});
+
 
 //Keep Render service awake by pinging itself every 14 minutes
 setInterval(() => {

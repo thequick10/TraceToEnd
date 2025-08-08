@@ -4,6 +4,7 @@ const campaigns = [];
 async function detectLocation() {
   const statusIndicator = document.getElementById("country-status");
   const countrySelect = document.getElementById("url-country");
+  const GEO_FETCH_API_KEY = '4d32f0da00224e50884faa071df764b9';
 
   statusIndicator.textContent = "🔍 Detecting...";
   statusIndicator.className = "status-indicator detecting";
@@ -12,7 +13,7 @@ async function detectLocation() {
     // Try multiple IP geolocation services for better reliability
     const services = [
       "https://ipapi.co/json/",
-      `https://api.ipgeolocation.io/ipgeo?apiKey=${process.env.GEO_FETCH_API_KEY}`,
+      `https://api.ipgeolocation.io/ipgeo?apiKey=${GEO_FETCH_API_KEY}`,
       "https://ipinfo.io/json",
     ];
 
