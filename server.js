@@ -689,7 +689,7 @@ app.get("/", (req, res) => {
 });
 
 // Get the usage.html file from analytics folder and making an endpoint
-app.get('/analytics/usage.html', basicAuth(authConfig), (req, res) => {
+app.get('/analytics/usage.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'analytics', 'usage.html'));
 });
 
