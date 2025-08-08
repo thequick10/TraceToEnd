@@ -9,6 +9,7 @@ import rateLimit from "express-rate-limit";
 import os from 'os';
 import basicAuth from 'express-basic-auth';
 import https from 'https';
+import session from 'express-session';
 import fs from 'fs/promises';
 
 dotenv();
