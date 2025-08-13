@@ -39,7 +39,7 @@ resolutionStats.failedUrls = [];
 console.log("📊 Resolution stats have been reset");
 }
 // Time of day to reset (24-hour format)
-const RESET_HOUR = 3;  // 3 AM
+const RESET_HOUR = 0;  // 5:30 AM - IST
 const RESET_MINUTE = 0;
 const RESET_SECOND = 0;
 
@@ -325,9 +325,10 @@ async function resolveWithBrowserAPI(inputUrl, region = "US", uaType) {
     page.setDefaultNavigationTimeout(20000);
 
     // Determine navigation timeout (use env variable or fallback to 60 seconds)
-    const timeout = Number(process.env.NAVIGATION_TIMEOUT) || 60000;
+    const envTimeout = Number(process.env.NAVIGATION_TIMEOUT);
+    const timeout = isNaN(envTimeout) ? 60000 : envTimeout;
 
-    if (process.env.NAVIGATION_TIMEOUT) {
+    if (!isNaN(envTimeout)) {
         console.log(`[INFO] Using navigation timeout: ${timeout} ms`);
     } else {
         console.log("[INFO] Using default timeout of 60000 ms");
@@ -341,13 +342,13 @@ async function resolveWithBrowserAPI(inputUrl, region = "US", uaType) {
 
     // Attempt to navigate to the URL with the specified timeout and handle errors gracefully
     try {
-      await page.goto(inputUrl, { waitUntil: "networkidle2", timeout: timeout });
+      await page.goto(inputUrl, { waitUntil: "domcontentloaded", timeout: timeout });
     } catch (err) {
       console.error(`[ERROR] Failed to navigate to ${inputUrl}:`, err.message);
     }
 
     // Optional wait
-    await page.waitForSelector("body", {timeout: 60000});
+    await page.waitForSelector("body", {timeout: 120000});
 
     // Get resolved final URL
     const finalUrl = page.url();
