@@ -202,7 +202,6 @@ const regionZoneMap = {
   IL: process.env.BRIGHTDATA_IL_PROXY,
   MD: process.env.BRIGHTDATA_MD_PROXY,
   RO: process.env.BRIGHTDATA_RO_PROXY,
-  SE: process.env.BRIGHTDATA_SE_PROXY,
   SA: process.env.BRIGHTDATA_SA_PROXY,
   CL: process.env.BRIGHTDATA_CL_PROXY
 };
